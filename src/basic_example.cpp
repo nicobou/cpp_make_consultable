@@ -33,7 +33,7 @@ class Widget {
   string get_name() const { return name_; }
   string hello(const string str) const {return "hello " + str;};
   void set_name(const string &name) { name_ = name; }
-
+  
  private:
    string name_{};
 };
