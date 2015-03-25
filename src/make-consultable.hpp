@@ -60,7 +60,7 @@
            typename ...ATs,                                             \
            typename ...BTs>                                             \
   R _consult_method(R(_member_type::*function)(ATs...),                 \
-                    BTs ...) const {                                    \
+                    BTs ...) const {					\
     static_assert(std::is_const<decltype(function)>::value,             \
                   "consultation is available for const methods only");  \
     return R();  /* for syntax only since assert should always fail */  \
@@ -69,10 +69,10 @@
   template<typename ...ATs,                                             \
            typename ...BTs>                                             \
   void _consult_method(void(_member_type::*function)(ATs...),           \
-                       BTs ...) const {                                 \
+                       BTs ...) const {					\
     static_assert(std::is_const<decltype(function)>::value,             \
                   "consultation is available for const methods only");  \
-  }
+  }                                                                     \
 
 
 
@@ -95,7 +95,7 @@
                                                                         \
   template<typename R,                                                  \
            typename ...ATs,                                             \
-           typename ...BTs>                                                            \
+           typename ...BTs>                                             \
   R _fw_method(                                                         \
       const typename std::decay<_map_key_type>::type &key,              \
       R( _fw_method##Consult_t ::*function)(ATs...) const,              \
@@ -131,7 +131,7 @@
            typename ...ATs,                                             \
            typename ...BTs>                                             \
   R _fw_method(R( _fw_method##Consult_t ::*function)(ATs...),           \
-               BTs ...args) const {                                     \
+               BTs ...) const {						\
     static_assert(std::is_const<decltype(function)>::value,		\
                   "consultation is available for const methods only");  \
     return R();  /* for syntax only */                                  \
@@ -140,7 +140,7 @@
   template<typename ...ATs,                                             \
            typename ...BTs>						\
   void _fw_method(void( _fw_method##Consult_t ::*function)(ATs...),     \
-                  BTs ...args) const {                                  \
+                  BTs ...) const {					\
     static_assert(std::is_const<decltype(function)>::value,		\
                   "consultation is available for const methods only");  \
   }
@@ -192,13 +192,13 @@
            typename ...BTs,                                             \
            /* enable_if work is depends from a template parameter, */   \
            /* using sizeof...(ATs) for that*/                           \
-           class = typename                                             \
-           std::enable_if<(sizeof...(ATs),                              \
-                           /* if _fw_method##MapKey_t is the same */    \
-                           /* type as nullptr then this forward does */ \
-                           /* not require map key forwarding*/          \
-                           !std::is_same<decltype(nullptr),             \
-                           _fw_method##MapKey_t >::value)>::type>       \
+           typename std::						\
+	   enable_if<(sizeof...(ATs),					\
+		      /* if _fw_method##MapKey_t is the same */		\
+		      /* type as nullptr then this forward does */	\
+		      /* not require map key forwarding*/		\
+		      !std::is_same<decltype(nullptr),			\
+		      _fw_method##MapKey_t >::value)>::type* = nullptr>	\
   inline R _fw_method(                                                  \
       _fw_method##MapKey_t key,                                         \
       /*typename std::enable_if<!std::is_class<>::value, T>::type,*/    \
@@ -216,13 +216,13 @@
            typename ...BTs,                                             \
            /* enable_if work is depends from a template parameter, */   \
            /* using sizeof(ATs) for that*/                              \
-           class = typename                                             \
-           std::enable_if<(sizeof...(ATs),                              \
-                           /* if _fw_method##MapKey_t is the same */    \
-                           /* type as nullptr then this forward does */ \
-                           /* not require map key forwarding*/          \
-                           !std::is_same<decltype(nullptr),             \
-                           _fw_method##MapKey_t >::value)>::type>       \
+           typename std::						\
+	   enable_if<(sizeof...(ATs),					\
+		      /* if _fw_method##MapKey_t is the same */		\
+		      /* type as nullptr then this forward does */	\
+		      /* not require map key forwarding*/		\
+		      !std::is_same<decltype(nullptr),			\
+		      _fw_method##MapKey_t >::value)>::type* = nullptr>	\
   inline void _fw_method(                                               \
       _fw_method##MapKey_t key,                                         \
       void( _fw_method##Consult_t ::*function)(ATs...) const,           \

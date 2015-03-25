@@ -17,7 +17,8 @@ test:
 	./basic_example-clang
 	./overload_example-gcc
 	./overload_example-clang
-	./forward_example-gcc forward_example-clang
+	./forward_example-gcc
+	./forward_example-clang
 
 clean:
 	rm basic_example-gcc basic_example-clang \
