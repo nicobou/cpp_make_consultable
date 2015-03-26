@@ -55,7 +55,7 @@ int main() {
        << endl;
        
        // static_cast allows for more verbosely selecting the wanted
-       cout << wo.consult_first<>(
+       cout << wo.consult_first(
            static_cast<string(Widget::*)(const string &) const>(&Widget::hello),
            "you")                                     // hello you
             << endl;

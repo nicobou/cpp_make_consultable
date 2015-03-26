@@ -27,9 +27,11 @@
 #include <functional>
 #include <type_traits>
 
-#define Make_consultable(_member_type,                                  \
-                         _member_rawptr,                                \
-                         _consult_method)                               \
+
+#define Make_consultable_full(_member_type,                             \
+                              _member_rawptr,                           \
+                              _consult_method,                          \
+                              _access_flag)                             \
   static_assert(std::is_class<_member_type>::value,                     \
                 "Make_consultable 1st arg must be a class");            \
                                                                         \
@@ -38,6 +40,11 @@
   /*saving consultable type for the forwarder(s)*/                      \
   using _consult_method##Consult_t = typename                           \
       std::remove_pointer<std::decay<_member_type>::type>::type;        \
+                                                                        \
+  enum  _consult_method##NonConst_t {                                   \
+    _consult_method##non_const,                                         \
+        _consult_method##const_only                                     \
+        };                                                              \
                                                                         \
   /* exposing T const methods accessible by T instance owner*/          \
   template<typename R,                                                  \
@@ -58,30 +65,50 @@
   /* disable invokation of non const*/                                  \
   template<typename R,                                                  \
            typename ...ATs,                                             \
-           typename ...BTs>                                             \
-  R _consult_method(R(_member_type::*function)(ATs...),                 \
-                    BTs ...) const {					\
-    static_assert(std::is_const<decltype(function)>::value,             \
-                  "consultation is available for const methods only");  \
-    return R();  /* for syntax only since assert should always fail */  \
+           typename ...BTs,                                             \
+           int i=_consult_method##_access_flag>                         \
+  inline R _consult_method(R(_member_type::*fun)(ATs...),               \
+                           BTs ...args) {                               \
+    static_assert( i == _consult_method##NonConst_t::                   \
+                   _consult_method##non_const,                          \
+                   "consultation is available for const methods only "  \
+                   "and delegation is disabled");                       \
+    return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
   }                                                                     \
                                                                         \
   template<typename ...ATs,                                             \
-           typename ...BTs>                                             \
-  void _consult_method(void(_member_type::*function)(ATs...),           \
-                       BTs ...) const {					\
-    static_assert(std::is_const<decltype(function)>::value,             \
-                  "consultation is available for const methods only");  \
+           typename ...BTs,                                             \
+           int i=_consult_method##_access_flag>                         \
+  void _consult_method(void(_member_type::*fun)(ATs...),                \
+                       BTs ...args) {                                   \
+    static_assert(i == _consult_method##NonConst_t::                    \
+                  _consult_method##non_const,                           \
+                   "consultation is available for const methods only"   \
+                  "and delegation is disabled");                        \
+    ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
   }                                                                     \
+  
+#define Make_consultable_default(...)                   \
+  Make_consultable_full(__VA_ARGS__, const_only)
+
+#define Make_delegate(...)                      \
+  Make_consultable_full(__VA_ARGS__, non_const)
+
+// overloading Make_consultable selection Make_consultable_full
+// and Make_consultable according to number of args
+#define Make_consultable_get_overload(_1, _2, _3, _4, NAME,...) NAME
+#define Make_consultable(...)                                           \
+  Make_consultable_get_overload(                                        \
+      __VA_ARGS__,                                                      \
+      Make_consultable_full,                                            \
+      Make_consultable_default)(__VA_ARGS__)
 
 
-
-
-#define Forward_consultable(_member_type,                               \
-                            _member_rawptr,                             \
-                            _consult_method,                            \
-                            _fw_method)                                 \
-                                                                        \
+#define Forward_consultable_full(_member_type,                          \
+                                 _member_rawptr,                        \
+                                 _consult_method,                       \
+                                 _fw_method,                            \
+                                 _access_flag)                          \
   /*forwarding key type*/                                               \
   using _fw_method##MapKey_t =                                          \
       typename std::decay<_member_type>::type::                         \
@@ -91,6 +118,11 @@
   using _fw_method##Consult_t = typename                                \
       std::decay<_member_type>::type::                                  \
       _consult_method##Consult_t;                                       \
+                                                                        \
+  enum  _fw_method##NonConst_t {                                        \
+    _fw_method##non_const,                                              \
+        _fw_method##const_only                                          \
+        };                                                              \
                                                                         \
   template<typename R,                                                  \
            typename ...ATs,                                             \
@@ -112,6 +144,40 @@
       BTs ...args) const {                                              \
     (_member_rawptr)->_consult_method<ATs...>(                          \
         std::forward<void( _fw_method##Consult_t ::*)(ATs...) const>(   \
+            function),                                                  \
+        std::forward<BTs>(args)...);                                    \
+  }									\
+                                                                        \
+  template<typename R,                                                  \
+           typename ...ATs,                                             \
+           typename ...BTs,                                             \
+           int i=_fw_method##_access_flag>                              \
+  inline R _fw_method(                                                  \
+      R( _fw_method##Consult_t ::*function)(ATs...),                    \
+      BTs ...args) {                                                    \
+    static_assert( i == _fw_method##NonConst_t::                        \
+                   _fw_method##non_const,                               \
+                   "Forwarded consultation is available for const "     \
+                   "methods only and non_const has not been set");      \
+    return (_member_rawptr)->                                           \
+        _consult_method<R, ATs...>(                                     \
+            std::forward<R( _fw_method##Consult_t ::*)(ATs...)>(        \
+                function),                                              \
+            std::forward<BTs>(args)...);                                \
+  }                                                                     \
+                                                                        \
+  template<typename ...ATs,                                             \
+           typename ...BTs,                                             \
+           int i=_fw_method##_access_flag>                              \
+  inline void _fw_method(                                               \
+      void( _fw_method##Consult_t ::*function)(ATs...),                 \
+      BTs ...args) {                                                    \
+    static_assert( i == _fw_method##NonConst_t::                        \
+                   _fw_method##non_const,                               \
+                   "Forwarded consultation is available for const "     \
+                   "methods only and non_const has not been set");      \
+    (_member_rawptr)->_consult_method<ATs...>(                          \
+        std::forward<void( _fw_method##Consult_t ::*)(ATs...)>(         \
             function),                                                  \
         std::forward<BTs>(args)...);                                    \
   }									\
@@ -164,7 +230,22 @@
             function),                                                  \
         std::forward<BTs>(args)...);                                    \
   }									\
-  
+
+#define Forward_consultable_default(...)                   \
+  Forward_consultable_full(__VA_ARGS__, const_only)
+
+#define Forward_delegate(...)                           \
+  Forward_consultable_full(__VA_ARGS__, non_const)
+
+// overloading Forward_consultable selection Make_consultable_full
+// and Forawrd_consultable according to number of args
+#define Forward_consultable_get_overload(_1, _2, _3, _4, _5, NAME,...)  \
+  NAME
+#define Forward_consultable(...)                                        \
+  Forward_consultable_get_overload(                                     \
+      __VA_ARGS__,                                                      \
+      Forward_consultable_full,                                         \
+      Forward_consultable_default)(__VA_ARGS__)
 
 // returns default constructed R if key not found
 // assuming the map is storing shared or unique pointers
