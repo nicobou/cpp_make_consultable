@@ -29,51 +29,45 @@ using namespace std;
 
 class Widget {
  public:
-  Widget(const string &name): name_(name){}
-  // a non const method:
+  // a non-const method:
   std::string hello(const std::string &str) {
     last_hello_ = str;
     return "hello " + str;
   }
  private:
-  string name_{};
   std::string last_hello_{};
 };
 
 class WidgetOwner {
  public:
   // all public methods are enabled with delegates:
-  Make_delegate(Widget, &first_, consult_first);
+  Make_delegate(Widget, &first_, use_first);
   Make_delegate(Widget, &second_, use_second);
   
   private:
-  Widget first_{"first"};
-  Widget second_{"second"};
+  Widget first_{};
+  Widget second_{};
 };
 
 class Box {
  public:
-  Forward_consultable(WidgetOwner, &wo_, consult_first, fwd_first);
+  Forward_consultable(WidgetOwner, &wo_, use_first, fwd_first);
   Forward_delegate(WidgetOwner, &wo_, use_second, fwd_second);
  private:
   WidgetOwner wo_;
 };
 
 int main() {
-  {  // testing access when owning WidgetOwner
-    WidgetOwner wo{};
-    // both invokation are allowed since first_ and second are delegated
-    cout << wo.consult_first(&Widget::hello, "you") << endl;   // hello you
-    cout << wo.use_second(&Widget::hello, "you") << endl;      // hello you
-  }
-  {  // testing access when owning Box 
-    Box b{};
-    // hello invocation from first_ is made unavailable (compile error)
-    // since forwarded as consultable.
-    // cout << b.fwd_first(&Widget::hello, "you") << endl;  
+  // testing access when owning WidgetOwner
+  WidgetOwner wo{};
+  // both invokation are allowed since first_ and second are delegated
+  cout << wo.use_first(&Widget::hello, "you") << endl;   // hello you
+  cout << wo.use_second(&Widget::hello, "you") << endl;  // hello you
 
-    // invocation of hello from second is still available
-    // since forwarded as delegate
-    cout << b.fwd_second(&Widget::hello, "you") << endl;        // hello you
-  }
+  // testing access when owning Box 
+  Box b{};
+  // compile error first_ is now a consultable:
+  // cout << b.fwd_first(&Widget::hello, "you") << endl;  
+  //  OK, second_ is a delegate:
+  cout << b.fwd_second(&Widget::hello, "you") << endl;   // hello you
 }
