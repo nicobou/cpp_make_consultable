@@ -28,12 +28,13 @@
 #include <type_traits>
 
 
-#define Make_consultable_full(_member_type,                             \
-                              _member_rawptr,                           \
-                              _consult_method,                          \
-                              _access_flag)                             \
+#define Make_access(_member_type,                                       \
+                    _member_rawptr,                                     \
+                    _consult_method,                                    \
+                    _access_flag)                                       \
   static_assert(std::is_class<_member_type>::value,                     \
-                "Make_consultable 1st arg must be a class");            \
+                "Make_consultable and Make Delegate first "             \
+                "argument must be a class");                            \
                                                                         \
   /*disabling key type for later forward*/                              \
   using _consult_method##MapKey_t = decltype(nullptr);                  \
@@ -41,7 +42,7 @@
   using _consult_method##Consult_t = typename                           \
       std::remove_pointer<std::decay<_member_type>::type>::type;        \
                                                                         \
-  enum  _consult_method##NonConst_t {                                   \
+  enum _consult_method##NonConst_t {                                    \
     _consult_method##non_const,                                         \
         _consult_method##const_only                                     \
         };                                                              \
@@ -62,14 +63,14 @@
     ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
   }                                                                     \
                                                                         \
-  /* disable invokation of non const*/                                  \
+  /* disable invokation of non-const if the flag is set*/               \
   template<typename R,                                                  \
            typename ...ATs,                                             \
            typename ...BTs,                                             \
-           int i=_consult_method##_access_flag>                         \
+           int flag=_consult_method##_access_flag>                      \
   inline R _consult_method(R(_member_type::*fun)(ATs...),               \
                            BTs ...args) {                               \
-    static_assert( i == _consult_method##NonConst_t::                   \
+    static_assert(flag == _consult_method##NonConst_t::                 \
                    _consult_method##non_const,                          \
                    "consultation is available for const methods only "  \
                    "and delegation is disabled");                       \
@@ -78,10 +79,10 @@
                                                                         \
   template<typename ...ATs,                                             \
            typename ...BTs,                                             \
-           int i=_consult_method##_access_flag>                         \
+           int flag=_consult_method##_access_flag>                      \
   void _consult_method(void(_member_type::*fun)(ATs...),                \
                        BTs ...args) {                                   \
-    static_assert(i == _consult_method##NonConst_t::                    \
+    static_assert(flag == _consult_method##NonConst_t::                 \
                   _consult_method##non_const,                           \
                    "consultation is available for const methods only"   \
                   "and delegation is disabled");                        \
@@ -89,18 +90,18 @@
   }                                                                     \
   
 #define Make_consultable_default(...)                   \
-  Make_consultable_full(__VA_ARGS__, const_only)
+  Make_access(__VA_ARGS__, const_only)
 
 #define Make_delegate(...)                      \
-  Make_consultable_full(__VA_ARGS__, non_const)
+  Make_access(__VA_ARGS__, non_const)
 
-// overloading Make_consultable selection Make_consultable_full
+// overloading Make_consultable selection Make_access
 // and Make_consultable according to number of args
 #define Make_consultable_get_overload(_1, _2, _3, _4, NAME,...) NAME
 #define Make_consultable(...)                                           \
   Make_consultable_get_overload(                                        \
       __VA_ARGS__,                                                      \
-      Make_consultable_full,                                            \
+      Make_access,                                            \
       Make_consultable_default)(__VA_ARGS__)
 
 
@@ -151,11 +152,11 @@
   template<typename R,                                                  \
            typename ...ATs,                                             \
            typename ...BTs,                                             \
-           int i=_fw_method##_access_flag>                              \
+           int flag=_fw_method##_access_flag>                           \
   inline R _fw_method(                                                  \
       R( _fw_method##Consult_t ::*function)(ATs...),                    \
       BTs ...args) {                                                    \
-    static_assert( i == _fw_method##NonConst_t::                        \
+    static_assert(flag == _fw_method##NonConst_t::                      \
                    _fw_method##non_const,                               \
                    "Forwarded consultation is available for const "     \
                    "methods only");                                     \
@@ -168,11 +169,11 @@
                                                                         \
   template<typename ...ATs,                                             \
            typename ...BTs,                                             \
-           int i=_fw_method##_access_flag>                              \
+           int flag=_fw_method##_access_flag>                           \
   inline void _fw_method(                                               \
       void( _fw_method##Consult_t ::*function)(ATs...),                 \
       BTs ...args) {                                                    \
-    static_assert( i == _fw_method##NonConst_t::                        \
+    static_assert(flag == _fw_method##NonConst_t::                      \
                    _fw_method##non_const,                               \
                    "Forwarded consultation is available for const "     \
                    "methods only");                                     \
@@ -237,7 +238,7 @@
 #define Forward_delegate(...)                           \
   Forward_consultable_full(__VA_ARGS__, non_const)
 
-// overloading Forward_consultable selection Make_consultable_full
+// overloading Forward_consultable selection Make_access
 // and Forawrd_consultable according to number of args
 #define Forward_consultable_get_overload(_1, _2, _3, _4, _5, NAME,...)  \
   NAME
