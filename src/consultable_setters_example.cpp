@@ -30,8 +30,8 @@ using namespace std;
 class Widget {
  public:
   Widget(const string &name): name_(name){}
-  // make a setter const, i.e. consultable from inside the delegate 
-  // name_ need to be mutable
+  // make a setter consultable from inside the delegate 
+  // set_name needs to be const and name_ needs to be mutable
   std::string set_name(const string &name) const {
     name_ = name;
     return name_;
@@ -53,6 +53,5 @@ int main() {
   // accessing set_name (made const from the Widget)
   cout << wo.consult_first(&Widget::set_name, "other")  // other
        << endl;
-
   return 0;
 }

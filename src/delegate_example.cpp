@@ -30,11 +30,7 @@ using namespace std;
 class Widget {
  public:
   Widget(const string &name): name_(name){}
-  // make a setter const, i.e. consultable from inside the delegate 
-  // name_ need to be mutable
-  std::string get_name() const {
-    return name_;
-  }
+  // a non const method:
   std::string hello(const std::string &str) {
     last_hello_ = str;
     return "hello " + str;
@@ -46,22 +42,19 @@ class Widget {
 
 class WidgetOwner {
  public:
-  Make_consultable(Widget, &first_, consult_first);
-  // all non const methods are enabled:
+  // all public methods are enabled with delegates:
+  Make_delegate(Widget, &first_, consult_first);
   Make_delegate(Widget, &second_, use_second);
-  Make_delegate(Widget, &third_, use_third);
   
   private:
   Widget first_{"first"};
   Widget second_{"second"};
-  Widget third_{"third"};
 };
 
 class Box {
  public:
   Forward_consultable(WidgetOwner, &wo_, consult_first, fwd_first);
   Forward_delegate(WidgetOwner, &wo_, use_second, fwd_second);
-  Forward_consultable(WidgetOwner, &wo_, use_third, fwd_third);
  private:
   WidgetOwner wo_;
 };
@@ -69,25 +62,18 @@ class Box {
 int main() {
   {  // testing access when owning WidgetOwner
     WidgetOwner wo{};
-    /* only invocation of hello from first is locked since made consultable */
-    // cout << wo.consult_first(&Widget::hello, "you") << endl;   // compile error
-     cout << wo.use_second(&Widget::hello, "you") << endl;        // hello you
-     cout << wo.use_third(&Widget::hello, "you") << endl;         // hello you
+    // both invokation are allowed since first_ and second are delegated
+    cout << wo.consult_first(&Widget::hello, "you") << endl;   // hello you
+    cout << wo.use_second(&Widget::hello, "you") << endl;      // hello you
   }
-  
   {  // testing access when owning Box 
     Box b{};
-    /* this time, hello invocation from third is made unavailable since
-     * forwarded as consultable.
-     * invocation of hello from second is still available since
-     * forwarded as delegate */
-    // cout << b.fwd_first(&Widget::hello, "you") << endl;  // still compile error
-    cout << b.fwd_second(&Widget::hello, "you") << endl;   // hello you
-    // cout << b.fwd_third(&Widget::hello, "you") << endl; // compile error 
-    
-    // ensuring const method are still available
-    cout << b.fwd_first(&Widget::get_name) << endl;   // first
-    cout << b.fwd_second(&Widget::get_name) << endl;  // second 
-    cout << b.fwd_third(&Widget::get_name) << endl;   // third 
+    // hello invocation from first_ is made unavailable (compile error)
+    // since forwarded as consultable.
+    // cout << b.fwd_first(&Widget::hello, "you") << endl;  
+
+    // invocation of hello from second is still available
+    // since forwarded as delegate
+    cout << b.fwd_second(&Widget::hello, "you") << endl;        // hello you
   }
 }

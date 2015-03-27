@@ -158,7 +158,7 @@
     static_assert( i == _fw_method##NonConst_t::                        \
                    _fw_method##non_const,                               \
                    "Forwarded consultation is available for const "     \
-                   "methods only and non_const has not been set");      \
+                   "methods only");                                     \
     return (_member_rawptr)->                                           \
         _consult_method<R, ATs...>(                                     \
             std::forward<R( _fw_method##Consult_t ::*)(ATs...)>(        \
@@ -175,7 +175,7 @@
     static_assert( i == _fw_method##NonConst_t::                        \
                    _fw_method##non_const,                               \
                    "Forwarded consultation is available for const "     \
-                   "methods only and non_const has not been set");      \
+                   "methods only");                                     \
     (_member_rawptr)->_consult_method<ATs...>(                          \
         std::forward<void( _fw_method##Consult_t ::*)(ATs...)>(         \
             function),                                                  \
