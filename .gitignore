@@ -1,3 +1,11 @@
-*~
 *-clang
 *-gcc
+*.aux
+*.bbl
+*.blg
+*.cpt
+*.log
+*.out
+*.pdf
+*.rtf
+*~

@@ -23,21 +23,18 @@
 
 #include <string>
 #include <iostream>
+#include <functional>
 #include "./make-consultable.hpp"
-
-using namespace std;
 
 class Widget {
  public:
-  Widget(const string &name): name_(name){}
   // make a setter consultable from inside the delegate 
-  // set_name needs to be const and name_ needs to be mutable
-  std::string set_name(const string &name) const {
-    name_ = name;
-    return name_;
+  // set_callback needs to be const and cb_ needs to be mutable
+  void set_callback(std::function<void ()> cb) const {
+    cb_ = cb;
   }
  private:
-  mutable string name_{};
+  mutable std::function<void()> cb_{nullptr};
 };
 
 class WidgetOwner {
@@ -45,13 +42,14 @@ class WidgetOwner {
   Make_consultable(Widget, &first_, consult_first);
   
   private:
-  Widget first_{"first"};
+  Widget first_{};
 };
 
 int main() {
   WidgetOwner wo{};
   // accessing set_name (made const from the Widget)
-  cout << wo.consult_first(&Widget::set_name, "other")  // other
-       << endl;
+  wo.consult_first(&Widget::set_callback, [](){
+      std::cout << "callback" << std::endl;
+    });
   return 0;
 }

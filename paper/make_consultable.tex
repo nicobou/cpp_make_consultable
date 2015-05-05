@@ -14,6 +14,8 @@
 
 \usepackage[margin=1.3in]{geometry}
 
+\renewcommand{\figurename}{Listing}
+
 \definecolor{mygray}{rgb}{0.4,0.4,0.4}
 \definecolor{keywordcolor}{rgb}{0.81,0.26,0.91}
 \definecolor{typecolor}{rgb}{0.42,0.59,0.26}
@@ -31,9 +33,9 @@
   showstringspaces=false,
   %stringstyle=\color{myorange},
   tabsize=2,
-  emph={get_name, set_name, consult_first,consult_second, hello, fwd_first, fwd_second},
+  emph={get_name, set_name, set_callback, consult_first,consult_second, hello, fwd_first, fwd_second},
   emphstyle={\color{blue}},
-  emph={[2]class, public, private, const, return, template, define, inline, using, typename},
+  emph={[2]class, public, private, const, return, template, define, inline, using, typename, nullptr},
   emphstyle={[2]\color{keywordcolor}},
 emph={[3]string, Widget, void, WidgetOwner, int, Box},
 emphstyle={[3]\color{typecolor}},
@@ -52,23 +54,27 @@ commentstyle=\footnotesize\sffamily\ttfamily\color{mygray},
 \title{Make and Forward Consultables and Delegates}
 \author{Nicolas Bouillot}
 \maketitle
+%%  It would help to have
+%% a small bit of example code illustrating why you need a wrapper, who
+%% is the "owner of the delegator", and how inheritance can be used
+%% instead of delegation.
 
-Traditional delegation in C++ requires the selection of delegate member made available to the owner of the delegator. This is implying either generation (or manual writing) of one wrapper per selected delegate method. Then, re-delegating from delegator owner requires re-writing all the wrappers. This is potentially resulting in a lot of wrappers, with a significant work to achieve between actual method implementation in the delegate and its availability to the end user. 
+Traditional delegation in C++ requires the selection of a delegate member made available to the owner of the delegator (the main context, . This implies either generation or manual writing of one wrapper per selected delegate method. Then, re-delegating from the delegator owner requires re-writing of all the wrappers. This potentially results in a lot of wrappers, with significant work to achieve between the actual method implementation in the delegate and its availability to the end user. 
 
-Here is presented an alternative approach: Consultable and Delegate. It automatize delegation and its forwarding with C++11 template programming. Two versions are proposed, \textit{Consultable} is making available all \verb+public const+ methods for safe access, and \textit{Delegate} that is making all public delegate methods available. The benefits of consultable \& delegate  is 1) no specific wrappers, less code, 2) a change in the delegate code becomes immediately available at the end caller, producing more easily maintainable code base and 3) non-const method access of a delegate can be blocked in any forwarding class by forwarding the delegate as a consultable. Here is presented how to use and implement\footnote{Source code and examples are available at\\ \url{https://github.com/nicobou/cpp_make_consultable}} \textit{Make and Forward consultables and delegates}.  
+An alternative approach is presented here: Consultable and Delegate. It automatizes delegation and its forwarding with C++11 template programming. Two versions are proposed, \textit{Consultable} makes available all \verb+public const+ methods for safe access, and \textit{Delegate} that is making all public delegate methods available. The benefits of consultable \& delegate  is 1) no specific wrappers, so less code, 2) a change in the delegate code becomes immediately available at the end caller, producing a more easily maintainable code base and 3) non-const method access of a delegate can be blocked in any forwarding class by forwarding the delegate as a consultable. How to use and implement\footnote{Source code and examples are available at\\ \url{https://github.com/nicobou/cpp_make_consultable}} \textit{Make and Forward consultables and delegates} is presented here.  
 
 \section{\textit{Selective} Delegation \& Consultable}
-Brief history: the Gang of Four\cite{1995gamma} describes delegation as consisting into having an requested object that delegates operations to a delegate object it is owning. This method is comparable to subclassing where inheritance allows for a subclass to automatically re-uses code (no wrapper) in a base class.  While delegation requires implementation of wrappers, subclassing has been seen as providing poor scaling and tends to lead to code that is hard to read, and therefore hard to correct and maintain \cite{2007cser}. As a rule of thumb, Scott Meyers proposes to use inheritance only when objects have a ``is-a'' relationship~\cite{2005Meyers}. It is however tempting for programmers to choose inheritance instead of delegation since writing wrappers is a tedious task and can still be an error prone.
+Brief history: the Gang of Four\cite{1995gamma} describes delegation as consisting of having an requested object that delegates operations to a delegate object it is owning. This method is comparable to subclassing where inheritance allows for a subclass to automatically re-uses code (no wrapper) in a base class.  While delegation requires the implementation of wrappers, subclassing has been seen as providing poor scaling and tends to lead to code that is hard to read, and therefore hard to correct and maintain \cite{2007cser}. As a rule of thumb, Scott Meyers proposes to use inheritance only when objects have an ``is-a'' relationship~\cite{2005Meyers}. It is however tempting for programmers to choose inheritance instead of delegation since writing wrappers is a tedious task and can still be error-prone.
 
-Delegation through automatic wrappers generation of \textit{selected} methods has been extensively proposed and implemented~\footnote{(accessed in March 2015)\\
+Delegation through automatic generation of wrappers for \textit{selected} methods has been extensively proposed and implemented~\footnote{(accessed in March 2015)\\
 \url{http://www.codeproject.com/Articles/11015/The-Impossibly-Fast-C-Delegates}\\
 \url{http://www.codeproject.com/Articles/7150/Member-Function-Pointers-and-the-Fastest-Possible}\\
 \url{http://www.codeproject.com/Articles/18886/A-new-way-to-implement-Delegate-in-C}\\
 \url{http://www.codeproject.com/Articles/384572/Implementation-of-Delegates-in-Cplusplus11}\\
 \url{http://www.codeproject.com/Articles/412968/ReflectionHelper}\\
-}.  While this gives a full control of which method are available, this also require to specify each delegated methods along the possible classes that delegates, subdelegates, sub-subdelegates, etc. This may result in laborious specification in multiple files, leading to duplication in the code base. In turn, safety remains in charge of the developer that decides a non const method can be exposed. 
+}.  While this gives a full control of which method are available, this also requires specification of each delegated methods along the possible classes that delegatea, subdelegate, sub-subdelegate, etc. This may result in laborious specification in multiple files, leading to duplication in the code base. In turn, safety remains in the hands of the developer who decides a non-const method can be exposed. 
 
-The goal of the approach proposed here is to avoid specifying the delegate methods, but instead make available all or \textit{const} only methods. This is achieved by making a class member \textbf{consultable} or \textbf{delegate} that is accessed through a programmer specified delegator method. The use of a consultable --invoking a method of the delegate-- by the requester is achieved by invoking the consult method, which arguments are the delegate method followed by the arguments. 
+The goal of the approach proposed here is to avoid specifying the delegate methods, but instead makes available all or \textit{const} only methods. This is achieved by making a class member \textbf{consultable} or \textbf{delegate} that is accessed through a programmer specified delegator method. The use of a consultable --invoking a method of the delegate-- by the requester is achieved by invoking the consult method, whose arguments are the delegate method followed by the arguments. 
 
 \begin{figure}[ht]
 {\small
@@ -104,7 +110,7 @@ The goal of the approach proposed here is to avoid specifying the delegate metho
 29   // wo.consult_first(&Widget::set_name, "third");
 30 }
 \end{lstlisting}}
-\cprotect\caption{Consultable declaration and use. This illustrates how \verb+get_name+ is accessed by a \verb+WidgetOwner+ without explicit declaration of it in the \verb+WidgetOwner+ class. Blue strings are methods, violet strings are keywords and green strings are types.}
+\cprotect\caption{Consultable declaration and use. This illustrates how \verb+get_name+ is accessed by a \verb+WidgetOwner+ without explicit declaration of it in the \verb+WidgetOwner+ class. At line 14, \verb+Make_consultable+ is actually declaring several methods named \verb+consult_first+ that will make consultation available to the user.}
 \label{example:basic}
 \end{figure}
 
@@ -112,9 +118,9 @@ The goal of the approach proposed here is to avoid specifying the delegate metho
 \section{Consultable}
 \subsection{Usage}
 
-Figure~\ref{example:basic} shows how consultables are used. Two \verb+Widget+ will be owned by a \verb+WidgetOwner+. These two members are made consultable in \verb+WidgetOwner+ (lines 14 and 15) and will be accessed respectively with \verb+consult_first+ and \verb+consult_second+ methods. \verb+Make_consultable+, as explained in Section~\ref{implementation} is a macro that internally declares templated consul methods. Its arguments are the type of the delegate, a reference to the delegate member and the consult method. 
+Listing~\ref{example:basic} shows how consultables are used. Two \verb+Widget+ will be owned by a \verb+WidgetOwner+. These two members are made consultable in \verb+WidgetOwner+ (lines 14 and 15) and will be accessed respectively with the \verb+consult_first+ and \verb+consult_second+ methods. \verb+Make_consultable+, as explained in Section~\ref{implementation} is a macro that internally declares templated consult methods. Its arguments are the type of the delegate, a reference to the delegate member and the consult method. 
 
-In the main function, the WidgetOwner object \verb+wo+ is instantiated and the Widget const method \verb+get_name+ is invoked on both delegates (lines 23 and 25). Note the comment in line 28 that show example of a not compiling use of \verb+consult_first+ with the non const \verb+set_name+ method. 
+In the main function, the WidgetOwner object \verb+wo+ is instantiated and the Widget const method \verb+get_name+ is invoked on both delegates (lines 23 and 25). Note the comment in line 28 showing an example of a use of \verb+consult_first+ with the non const \verb+set_name+ method which does not compile. 
 
 \subsection{Forwarding Consultable}
 
@@ -151,16 +157,15 @@ In the main function, the WidgetOwner object \verb+wo+ is instantiated and the W
 28   cout << b.fwd_first(&Widget::get_name)   // prints First
 29        << b.fwd_second(&Widget::get_name)  // prints Second
 30        << endl; 
-31   return 0;
-32 }
+31 }
 \end{lstlisting}}
 \cprotect\caption{Forwarding consultable example.}
 \label{example:forward}
 \end{figure}
 
-As seen before, an object is made consultable and accessible through a consult method. Accordingly, a class composed of delegate owner(s) can access the delegate methods. However, this class does not have access to the reference of the original delegate, making impossible to apply \verb+Make_consultable+. In this case, \verb+Forward_consultable+ allows to select the consult method and \textit{forward} it to the user. A forwarded consultable can be re-forwarded, etc. 
+As seen before, an object is made consultable and accessible through a consult method. Accordingly, a class composed of delegate owner(s) can access the delegate methods. However, this class does not have access to the reference of the original delegate, making impossible to apply \verb+Make_consultable+. In this case, \verb+Forward_consultable+ allows selection of the consult method and \textit{forwards} it to the user. A forwarded consultable can be re-forwarded, etc. 
 
-Figure~\ref{example:forward} shows how it is used: \verb+WidgetOwner+ is making \verb+first_+ and \verb+second_+ consultables. Box is owning a \verb+WidgetOwner+ and forward access to the consultables using \verb+Forward_consultable+ (line 20 and 21). Then, a Box Owner can access the consultable through \verb+fwd_first+, a \verb+Box+ method installed by the forward (line 28).   
+Listing~\ref{example:forward} shows how it is used: \verb+WidgetOwner+ is making \verb+first_+ and \verb+second_+ consultables. Box is owning a \verb+WidgetOwner+ and forward access to the consultables using \verb+Forward_consultable+ (line 20 and 21). Then, a Box Owner can access the consultable through \verb+fwd_first+, a \verb+Box+ method installed by the forward (line 28).   
 
 \subsection{Overloads}
 \begin{figure}[ht]
@@ -186,17 +191,17 @@ Figure~\ref{example:forward} shows how it is used: \verb+WidgetOwner+ is making 
 18        
 19        // static_cast allows for more verbosely selecting the wanted
 20        cout << wo.consult_first(
-21            static_cast<string(Widget::*)(const string &) const>(&Widget::hello),
-22            "you")                                     // hello you
-23             << endl;
-24   return 0;
+21            static_cast<string(Widget::*)
+22                       (const string &) const>(&Widget::hello),
+23            "you")                                     // hello you
+24             << endl;
 25 }
 \end{lstlisting}}
-\cprotect\caption{Overloaded methods in the delegate class. Types from overloaded method are given as template parameter in order to select the wanted implementation.}
+\cprotect\caption{Overloaded methods in the delegate class. Types from overloaded method are given as template parameters in order to select the wanted implementation.}
 \label{example:overload}
 \end{figure}
 
-The use of consultable requires the user to pass a pointer to delegate method as argument. Accordingly, overloaded delegate members need more specification for being used with consult methods. As shown in Figure~\ref{example:overload}, this is achieved giving return and argument(s) types as template parameters (line 14 and 15). Overload selection can also be achieved using static casting the member pointer (line 21). This is however more verbose and might not be appropriate for use.  
+The use of consultable requires the user to pass a pointer to the delegate method as argument. Accordingly, overloaded delegate members need more specification for use with consult methods. As shown in Listing~\ref{example:overload}, this is achieved giving return and argument(s) types as template parameters (line 14 and 15). Overload selection can also be achieved using static casting the member pointer (line 21). This is however more verbose and might not be appropriate for use.  
 
 \subsection{Enabling setters}
 
@@ -205,45 +210,43 @@ The use of consultable requires the user to pass a pointer to delegate method as
 \begin{lstlisting}
  1 class Widget {
  2  public:
- 3   Widget(const string &name): name_(name){}
- 4   // make a setter consultable from inside the delegate 
- 5   // set_name needs to be const and name_ needs to be mutable
- 6   std::string set_name(const string &name) const {
- 7     name_ = name;
- 8     return name_;
- 9   }
-10  private:
-11   mutable string name_{};
-12 };
-13 
-14 class WidgetOwner {
-15  public:
-16   Make_consultable(Widget, &first_, consult_first);
-17   
-18  private:
-19   Widget first_{"first"};
-20 };
-21 
-22 int main() {
-23   WidgetOwner wo{};
-24   // accessing set_name (made const from the Widget)
-25   cout << wo.consult_first(&Widget::set_name, "other")  // other
-26        << endl;
-27   return 0;
-28 }
+ 3   // make a setter consultable from inside the delegate 
+ 4   // set_callback needs to be const and cb_ needs to be mutable
+ 5   void set_callback(std::function<void ()> cb) const {
+ 6     cb_ = cb;
+ 7   }
+ 8  private:
+ 9   mutable std::function<void()> cb_{nullptr};
+10 };
+11 
+12 class WidgetOwner {
+13  public:
+14   Make_consultable(Widget, &first_, consult_first);
+15   
+16   private:
+17   Widget first_{};
+18 };
+19 
+20 int main() {
+21   WidgetOwner wo{};
+22   // accessing set_name (made const from the Widget)
+23   wo.consult_first(&Widget::set_callback, [](){
+24       std::cout << "callback" << std::endl;
+25     });
+26 }
 \end{lstlisting}}
-\cprotect\caption{Enabling setters in the delegate class. This is achieved making the setter a const method (line~6), and accordingly making the member mutable (line 11). Accordingly, the setter is made explicitly enabled for consultation when looking at the \verb+Widget+ header file.}
+\cprotect\caption{Enabling setters in the delegate class. This is achieved by making the setter a const method (line~5), and accordingly making the member mutable (line 9). The setter is used in order to pass a lamba (lines~23-25) function that will be stored by the Widget (line~6). As a result, the setter is explicitly enabled when \verb+Widget+ is made consultable. This is also made explicit to the programmer who is reading the \verb+Widget+ header file.}
 \label{example:setters}
 \end{figure}
 
-\verb+Make_consultable+ does not feature selective inclusion of a non-const methods. However, as illustrated by Figure~\ref{example:setters}, the enabling of a setter can be obtained from inside the delegate class, making it const and declaring \verb+mutable+ the concerned member. 
+Although a \textit{Consultable} makes available all \verb+public const+ methods, it may need to have a setter that can be safely used. For instance, \textit{consultable} could provide a setter that configure the refresh rate of an internal measure in a thread, or a setter for registering a callback function. Since \verb+Make_consultable+ does not feature selective inclusion of a non-const methods, a possible way for setter inclusion is to declare it const concerned member \verb+mutable+. This is illustrated with Listing~\ref{example:setters}, where the enabling of a setter is obtained from inside the delegate class. 
 
-This is the preferred way compared to introducing selective delegation from the delegator. First selection of a method from the delegator would break safety: it will be potentially forwarded and then accessed by multiple class, allowing internal state modification from several classes. In this case, the setter may need internal mechanism for being safe to be accessed (mutex, ...), which should probably be ensured from the delegate itself. The use of \verb+mutable+ and \verb+const+ for the member setter is expliciting the intention of giving a safe access and is indicating the user the method is available for consultation directly from the delegate header. 
+This approach seems to be more approriate than introducing selective delegation from the delegator. First, the selection of a method from the delegator would break safety: it will be potentially forwarded and then accessed by multiple class, allowing internal state modification from several classes. In this case, the setter may need internal mechanism for being safe to be accessed (mutex, ...), which should probably be ensured from the delegate itself. Second, the use of \verb+mutable+ and \verb+const+ for the member setter is making explicit the intention of giving a safe access and is accordingly indicating to the user the method is available for consultation directly from the delegate header. 
 
 \subsection{Implementation}
 \label{implementation}
 
-An extract of implementation of both \verb+Make_consultable+ and \verb+Forward_consultable+ are presented here. Although almost complete, the available source code provides an additional overload of the consult method for void returning methods. 
+An extract of implementation of both \verb+Make_consultable+ and \verb+Forward_consultable+ are presented here. Although not presented here, the available source code hosted on github provides additional overloads for methods returning void. 
 
 \begin{figure}[ht]
 {\small
@@ -276,11 +279,11 @@ An extract of implementation of both \verb+Make_consultable+ and \verb+Forward_c
 26     return R();  /* for syntax only since assert should always fail */  \
 27   }                                                                     \
 \end{lstlisting}}
-\cprotect\caption{Implementation of \verb+Make_consultable+. Overload resolution for \verb+_consul_method+ select delegate member according to their constness. If not const, compilation is aborted with \verb+static_assert+.}
+\cprotect\caption{Implementation of \verb+Make_consultable+. Overload resolution for \verb+_consult_method+ select delegate member according to their constness. If not const, compilation is aborted with \verb+static_assert+.}
 \label{impl:make}
 \end{figure}
 
-Figure~\ref{impl:make} presents \verb+Make_consultable+ implementation. The use of a macro allows for declaring the consultation methods. Accordingly, a consult method (\verb+_consult_method+), which name is given by a macro argument, can be specified as public or protected. The declaration consist in two overloads that are distinguished by their constness. More particularly, the non-const overload is failing to compile with a systematic \verb+static_assert+ when this overload is selected by type deduction, disabling accordingly the use of delegate non-const methods. The consult method (line 13) uses variadic template for wrapping any const methods from the delegate (\verb+fun+), taking the method pointer and the arguments to pass at invocation. Notice the types of \verb+fun+ arguments (\verb+ATs+) and the types of the consult method arguments (\verb+BTs+) are specified independently, allowing a user to pass arguments which does not have the exact same type, allowing then to pass a \verb+char *+ for an argument specified as a \verb+const string &+.      
+Listing~\ref{impl:make} presents the \verb+Make_consultable+ implementation. The use of a macro allows for declaring the consultation methods. Accordingly, a consult method (\verb+_consult_method+), which name is given by a macro argument, can be specified as public or protected. The declaration consists of two overloads that are distinguished by their constness. More particularly, the non-const overload fails to compile with a systematic \verb+static_assert+ when this overload is selected by type deduction, disabling accordingly the use of delegate non-const methods. The consult method (line 13) uses a variadic template for wrapping any const methods from the delegate (\verb+fun+), taking the method pointer and the arguments to pass at invocation. Notice the types of \verb+fun+ arguments (\verb+ATs+) and the types of the consult method arguments (\verb+BTs+) are specified independently, allowing a user to pass arguments which does not have the exact same type, allowing them to pass a \verb+char *+ for an argument specified as a \verb+const string &+.      
  
 The delegate type is saved for later reuse when forwarding (lines 6 and 7). This is using macro concatenation \verb+##+ in order generate a type name a forwarder can find, i.e. the consult method name concatenated with the string \verb+Consult_t+. 
 
@@ -314,7 +317,7 @@ The delegate type is saved for later reuse when forwarding (lines 6 and 7). This
 \label{impl:forward}
 \end{figure}
 
-This brings us to implementation of \verb+Forward_consultable+ (Figure~\ref{impl:forward}). As with \verb+Make_consultable+, it is actually an inlined wrapper generator using variadic template. However, it has no reference to the delegate, but only to the consult method it is invoking at line 18. The delegate type in obtained from the previously saved member type (line 7 to 9) and used for invoking the consult method (line 19). Again, the delegate type is saved for possible forwarders of this forward (line 7).   
+This brings us to the implementation of \verb+Forward_consultable+ (Listing~\ref{impl:forward}). As with \verb+Make_consultable+, it is actually an inlined wrapper generator using variadic template. However, it has no reference to the delegate, but only to the consult method it is invoking at line 18. The delegate type in obtained from the previously saved member type (line 7 to 9) and used for invoking the consult method (line 19). Again, the delegate type is saved for possible forwarders of this forward (line 7).   
 
 \section{Make \& Forward Delegate}
 
@@ -357,17 +360,17 @@ This brings us to implementation of \verb+Forward_consultable+ (Figure~\ref{impl
 33   cout << wo.use_second(&Widget::hello, "you") << endl;  // hello you
 34 
 35   Box b{};
-36   // compile error first_ is now a consultable:
+36   // compile error, first_ is now a consultable:
 37   // cout << b.fwd_first(&Widget::hello, "you") << endl;  
 38   //  OK, second_ is a delegate:
 39   cout << b.fwd_second(&Widget::hello, "you") << endl;   // hello you
 40 }
 \end{lstlisting}}
-\cprotect\caption{}
+\cprotect\caption{Make and forward delegate example.}
 \label{example:delegate}
 \end{figure}
 
-The Delegate presented here is similar to Consultable, excepted that non-const methods are also enabled. They are also forwardable as Consultable, blocking the access to non-const methods to the owner of the forwarded. Figure~\ref{example:delegate} illustrates how access to non-const method can be managed and blocked when desired: \verb+hello+ is a non-const method in Widget. \verb+widgetOwner+ is Making two Delegates \verb+first_+ and \verb+second_+ (lines 13 \& 14). hello is accordingly available from the owner of a \verb+WidgetOwner+ (lines 32 \& 33). However, \verb+Box+ is forwarding access to \verb+first_+ as consultable (line 23) and access to \verb+second_+ as delegate (line 24). As a result, the owner of a \verb+Box+ have access to non-const method of \verb+second_+ (line 39), but access to const only methods of \verb+first_+ (line 37).     
+The Delegate presented here is similar to Consultable, except that non-const methods are also enabled. They are also forwardable as Consultable, blocking the access to non-const methods of the owner of the forwarded. Listing~\ref{example:delegate} illustrates how access to non-const method can be managed and blocked when desired: \verb+hello+ is a non-const method in Widget. \verb+widgetOwner+ is Making two Delegates \verb+first_+ and \verb+second_+ (lines 13 \& 14). hello is accordingly available from the owner of a \verb+WidgetOwner+ (lines 32 \& 33). However, \verb+Box+ is forwarding access to \verb+first_+ as consultable (line 23) and access to \verb+second_+ as delegate (line 24). As a result, the owner of a \verb+Box+ have access to non-const method of \verb+second_+ (line 39), but access to const only methods of \verb+first_+ (line 37).     
 
 \subsection{Implementation}
 
@@ -402,21 +405,25 @@ The Delegate presented here is similar to Consultable, excepted that non-const m
 \label{impl:flag}
 \end{figure}
 
-The core implementation of \verb+Make_Delegate+ is actually the same as Consultable. In the source code, consultable and delegate is chosen with a flag that enables or disables access to non-const methods\footnote{For expected improvement of clarity, Figure~\ref{impl:make} is a simplification of actual code, hiding the flag mechanism.}. \verb+Make_consultable+ and \verb+Make_delegate+ are actually macros that expand to the same macro with the appropriate flag. 
+The core implementation of \verb+Make_Delegate+ is actually the same as Consultable. In the source code, consultable and delegate is chosen with a flag that enables or disables access to non-const methods\footnote{For expected improvement of clarity, Listing~\ref{impl:make} is a simplification of actual code, hiding the flag mechanism.}. \verb+Make_consultable+ and \verb+Make_delegate+ are actually macros that expand to the same macro with the appropriate flag. 
 
-Figure~\ref{impl:flag} is presenting how this flag is implemented in the \verb+Make_access+ macro. This template is selected when a non-const pointer to the delegate is given (\verb+fun+ is not a const member). The flag is a non-type template parameter \verb+flag+ (line 15) which value is determined by the concatenation of macro parameters \verb+_consult_method+ and \verb+_access_flag+. This value is tested (\verb+static_assert+ line 18) against the pre-defined enum values (line 6-9), enabling access to non-const methods or not at compile time. Accordingly, \verb+_access_flag+ must take one of the two following string: \verb+non_const+ or \verb+const_only+.   
+Listing~\ref{impl:flag} is presenting how this flag is implemented in the \verb+Make_access+ macro. This template is selected when a non-const pointer to the delegate is given (\verb+fun+ is not a const member). The flag is a non-type template parameter \verb+flag+ (line 15) which value is determined by the concatenation of macro parameters \verb+_consult_method+ and \verb+_access_flag+. This value is tested (\verb+static_assert+ line 18) against the pre-defined enum values (line 6-9), enabling access to non-const methods or not at compile time. Accordingly, \verb+_access_flag+ must take one of the two following string: \verb+non_const+ or \verb+const_only+.   
  
 The implementation of \verb+Forward_delegate+ and \verb+Forward_consultable+ is also using the same flag mechanism for disabling or not the use of non-const methods. 
 
 \section{Summary \& Discussion}
-\textit{Consultable} and \textit{Delegate} has been presented, including how they can be used with overloaded methods inside the delegate class, how specific setters can be enabled with for consultable. Forwarding is also presented, allowing to make available delegate method until the user through any number of classes with access right (public const methods only or all public methods). 
+\textit{Consultable} and \textit{Delegate} has been presented, including how they can be used with overloaded methods inside the delegate class, how specific setters can be enabled with for consultable. Forwarding is also presented, allowing to make available delegate methods to the user through any number of classes with access rights (public const methods only or all public methods). 
 
 Their implementation is based on C++11 template programming and macros inserted inside the class declaration, specifying the member to delegate and the name of the access method to generate to the user. Examples and source code are available on github. This has been compiled and tested with gcc 4.8.2-19ubuntu1, clang 3.4-1ubuntu3 \& Apple LLVM version 6.0.
 
-The source code also includes \verb+Forward_consultable_from_map+, which has not been presented here since very specific. Forwarding from containers should be developed more in order to let the user managing container search and possible errors. This might be implemented giving a std::function object that retrieve the target in the container and tells the forwarded at running time if the object is valid or not.        
+The source code also includes \verb+Forward_consultable_from_map+, which has not been presented here since very specific. Forwarding from containers should be developed more in order to let the user manage container search and possible errors. This might be implemented giving a std::function object that retrieves the target in the container and tells the forwarded at runtime if the object is valid or not.        
 
 \section{Acknowledgement}
 This work has been done at the Société des Arts Technologiques and funded by the Québec Ministry of Superior Education, Research, Science and Technology.
 \bibliographystyle{unsrt}
 \bibliography{bibliography}
+
+\section{Biography}
+ Nicolas Bouillot is a research associate at the Society for Arts and Technology (SAT, Montreal, Canada). He likes C++ programming, team-based working, writing research papers, networks and distributed systems, data streaming, distributed music performances, teaching and audio signal processing. 
+
 \end{document}
