@@ -54,12 +54,18 @@ commentstyle=\footnotesize\sffamily\ttfamily\color{mygray},
 \title{Make and Forward Consultables and Delegates}
 \author{Nicolas Bouillot}
 \maketitle
-%%  It would help to have
-%% a small bit of example code illustrating why you need a wrapper, who
-%% is the "owner of the delegator", and how inheritance can be used
-%% instead of delegation.
 
-Traditional delegation in C++ requires the selection of a delegate member made available to the owner of the delegator (the main context, . This implies either generation or manual writing of one wrapper per selected delegate method. Then, re-delegating from the delegator owner requires re-writing of all the wrappers. This potentially results in a lot of wrappers, with significant work to achieve between the actual method implementation in the delegate and its availability to the end user. 
+Separating functionnalities, code reuse, code maintainability: all these concerns seem critical. When writing a C++ class, delegation and inheritence are tools enabling both separation of functionnality implementation and code reuse. Before introducing the making and forwarding of Consultable and Delegate, let us review some points that make delegation and inheritence two very differents tools in the hand of the programmer. We will also explain why they might be seen as poorly scaling tools with increase of code base, and why the Consultable and Delegate presented here overcome this limitation.
+
+With public inheritence, public methods from the base class are made available directly through the reference of the object. While this makes available an additionnal functionality without extra code, inheriting from multiple functionnalities need cleverly writen base classes in order to avoid members and methods collisions and ambiguity. As a result the more base class is inherited, the more collisions are probable, including inheritence to the same base class (diamond problem).
+
+With traditionnal C++ delegation, called here \textit{selective delegation}, the added functionnality is a private class member (the delegate), which can be accessed by the user thanks to wrappers in allowing to access the member's methods. This is scaling regarding number of added functionnalities. One can even have two functionnalities of the same type used as delegate, which cannot be achieved with inheritence. However, manualy writen wrappers is not scaling as the use of delegation increase: once the signature of a method is changed in the delegate, the wrappers need to be manually updated.  
+ 
+Let have a look at which methods are exposed to the user with inheritence and selective delegation. With inheritence, all public methods, regardless of their constness are made available. There no option to give access to const only methods, and accordingly reserving the write access to the meber while giving read access to the user. With selective delegation, the access rights to the functionnality are given throught wrapper, giving full control to the programmer. With the \textit{Consultables} presented here, wrappers are made automatically with the access rights are determined by the constness of the delegate methods. 
+
+Let us take an example. A class is having a std::vector for internal use (write access). However, it is wanted to give a read access to the class user. In this case, the class inheriting from std::vector is not an option and selective delegation require to wrap all const methods and operators for the user, or a subset (more probable) of methods. When wrapping, is it considered necessary to include access to \verb+cbegin+ and \verb+cend+? Probably not is the user does not use them when writing the wrapper.  
+
+What about forwarding delegation? The class (delagator) owning the delegate is used by an other class (delegator owner). With selective delegation, wrapper needs to be rewritten in order to have make initial delegate available to the user of the delegator owner. 
 
 An alternative approach is presented here: Consultable and Delegate. It automatizes delegation and its forwarding with C++11 template programming. Two versions are proposed, \textit{Consultable} makes available all \verb+public const+ methods for safe access, and \textit{Delegate} that is making all public delegate methods available. The benefits of consultable \& delegate  is 1) no specific wrappers, so less code, 2) a change in the delegate code becomes immediately available at the end caller, producing a more easily maintainable code base and 3) non-const method access of a delegate can be blocked in any forwarding class by forwarding the delegate as a consultable. How to use and implement\footnote{Source code and examples are available at\\ \url{https://github.com/nicobou/cpp_make_consultable}} \textit{Make and Forward consultables and delegates} is presented here.  
 
@@ -419,7 +425,7 @@ Their implementation is based on C++11 template programming and macros inserted 
 The source code also includes \verb+Forward_consultable_from_map+, which has not been presented here since very specific. Forwarding from containers should be developed more in order to let the user manage container search and possible errors. This might be implemented giving a std::function object that retrieves the target in the container and tells the forwarded at runtime if the object is valid or not.        
 
 \section{Acknowledgement}
-This work has been done at the Société des Arts Technologiques and funded by the Québec Ministry of Superior Education, Research, Science and Technology.
+This work has been done at the Société des Arts Technologiques and funded by the Ministère de l'Économie, de l'Innovation et des Exportations (Québec, Canada).
 \bibliographystyle{unsrt}
 \bibliography{bibliography}
 
