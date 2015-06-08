@@ -21,35 +21,40 @@
  * THE SOFTWARE.
  */
 
-#include <string>
+#include <vector>
 #include <iostream>
-#include <functional>
 #include "./make-consultable.hpp"
 
-class Widget {
- public:
-  // make a setter consultable from inside the delegate 
-  // set_callback needs to be const and cb_ needs to be mutable
-  void set_callback(std::function<void ()> cb) const {
-    cb_ = cb;
-  }
- private:
-  mutable std::function<void()> cb_{nullptr};
-};
+using namespace std;
 
-class WidgetOwner {
+using vect_t = std::vector<int>;
+using cref_t = vect_t::const_reference;
+using vsize_t = vect_t::size_type;
+
+class VectorOwner {
  public:
-  Make_consultable(Widget, &first_, consult_first);
-  
-  private:
-  Widget first_{};
+  Make_consultable(vect_t, &first_, consult_first);
+  Make_consultable(vect_t, &second_, consult_second);
+
+ private:
+  vect_t first_{{10, 20, 30}};
+  vect_t second_{{40, 50}};
 };
 
 int main() {
-  WidgetOwner wo{};
-  // accessing set_name (made const from the Widget)
-  wo.consult_first(&Widget::set_callback, [](){
-      std::cout << "callback" << std::endl;
-    });
-  return 0;
+  VectorOwner wo;                                   // print:
+  cout << wo.consult_first(&vect_t::size)           // 3
+       << wo.consult_second(&vect_t::size)          // 2
+       << *wo.consult_second(&vect_t::cbegin)       // 40
+       << wo.consult_second<cref_t, vsize_t>(
+           &vect_t::operator[], 1)                  // 50
+       << endl;
+
+  for (auto it = wo.consult_first(&vect_t::cbegin);
+       it !=  wo.consult_first(&vect_t::cend);
+       ++it) {                                      //102030
+    std::cout << *it;                                
+  }
+  std::cout << std::endl;
+
 }

@@ -3,7 +3,8 @@ all: \
     overload_example \
     forward_example \
     consultable_setters_example \
-    delegate_example
+    delegate_example \
+    vector_example 
 
 basic_example: basic_example.cpp
 	g++ -std=c++11 -o basic_example-gcc -Wall -Werror -Wfatal-errors basic_example.cpp 
@@ -25,6 +26,10 @@ delegate_example: delegate_example.cpp
 	g++ -std=c++11 -o delegate_example-gcc -Wall -Werror -Wfatal-errors delegate_example.cpp 
 	clang++ -std=c++11 -o delegate_example-clang -Wall -Werror -Wfatal-errors delegate_example.cpp 
 
+vector_example: vector_example.cpp
+	g++ -std=c++11 -o vector_example-gcc -Wall -Werror -Wfatal-errors vector_example.cpp 
+	clang++ -std=c++11 -o vector_example-clang -Wall -Werror -Wfatal-errors vector_example.cpp 
+
 test:
 	./basic_example-gcc
 	./basic_example-clang
@@ -36,10 +41,13 @@ test:
 	./consultable_setters_example-clang
 	./delegate_example-gcc
 	./delegate_example-clang
+	./vector_example-gcc
+	./vector_example-clang
 
 clean:
 	rm basic_example-gcc basic_example-clang \
            overload_example-gcc overload_example-clang \
            forward_example-gcc forward_example-clang \
            consultable_setters_example-gcc consultable_setters_example-clang \
-           delegate_example-gcc delegate_example-clang
+           delegate_example-gcc delegate_example-clang \
+           vector_example-gcc vector_example-clang
