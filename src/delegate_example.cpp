@@ -41,8 +41,8 @@ class Widget {
 class WidgetOwner {
  public:
   // all public methods are enabled with delegates:
-  Make_delegate(Widget, &first_, use_first);
-  Make_delegate(Widget, &second_, use_second);
+  Make_delegate(WidgetOwner, Widget, &first_, use_first);
+  Make_delegate(WidgetOwner, Widget, &second_, use_second);
   
   private:
   Widget first_{};

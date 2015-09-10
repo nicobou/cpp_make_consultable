@@ -4,7 +4,8 @@ all: \
     forward_example \
     consultable_setters_example \
     delegate_example \
-    vector_example 
+    vector_example \
+    selective_encapsulation
 
 basic_example: basic_example.cpp
 	g++ -std=c++11 -o basic_example-gcc -Wall -Werror -Wfatal-errors basic_example.cpp 
@@ -30,6 +31,10 @@ vector_example: vector_example.cpp
 	g++ -std=c++11 -o vector_example-gcc -Wall -Werror -Wfatal-errors vector_example.cpp 
 	clang++ -std=c++11 -o vector_example-clang -Wall -Werror -Wfatal-errors vector_example.cpp 
 
+selective_encapsulation: selective_encapsulation.cpp
+	g++ -std=c++11 -o selective_encapsulation-gcc -Wall -Werror -Wfatal-errors selective_encapsulation.cpp 
+	clang++ -std=c++11 -o selective_encapsulation-clang -Wall -Werror -Wfatal-errors selective_encapsulation.cpp 
+
 test:
 	./basic_example-gcc
 	./basic_example-clang
@@ -43,6 +48,8 @@ test:
 	./delegate_example-clang
 	./vector_example-gcc
 	./vector_example-clang
+	./selective_encapsulation-gcc
+	./selective_encapsulation-clang
 
 clean:
 	rm basic_example-gcc basic_example-clang \
@@ -50,4 +57,5 @@ clean:
            forward_example-gcc forward_example-clang \
            consultable_setters_example-gcc consultable_setters_example-clang \
            delegate_example-gcc delegate_example-clang \
-           vector_example-gcc vector_example-clang
+           vector_example-gcc vector_example-clang \
+           selective_encapsulation-gcc selective_encapsulation-clang		

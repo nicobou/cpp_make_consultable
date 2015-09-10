@@ -40,8 +40,8 @@ class Widget {
 
 class WidgetOwner {
  public:
-  Make_consultable(Widget, &first_, consult_first);
-  Make_consultable(Widget, &second_, consult_second);
+  Make_consultable(WidgetOwner, Widget, &first_, consult_first);
+  Make_consultable(WidgetOwner, Widget, &second_, consult_second);
 
  private:
   Widget first_{"first"};

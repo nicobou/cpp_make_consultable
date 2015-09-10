@@ -33,8 +33,8 @@ using vsize_t = vect_t::size_type;
 
 class VectorOwner {
  public:
-  Make_consultable(vect_t, &first_, consult_first);
-  Make_consultable(vect_t, &second_, consult_second);
+  Make_consultable(VectorOwner, vect_t, &first_, consult_first);
+  Make_consultable(VectorOwner, vect_t, &second_, consult_second);
 
  private:
   vect_t first_{{10, 20, 30}};

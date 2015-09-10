@@ -39,7 +39,7 @@ class Widget {
 
 class WidgetOwner {
  public:
-  Make_consultable(Widget, &first_, consult_first);
+  Make_consultable(WidgetOwner, Widget, &first_, consult_first);
   
   private:
   Widget first_{};

@@ -27,8 +27,21 @@
 #include <functional>
 #include <type_traits>
 
+#define Encapsulate_consultable(_consult_method,                        \
+                                _encapsulate_return_type,               \
+                                _method_encapsulated)                   \
+                                                                        \
+  static void _consult_method##enable_encaps(){}                        \
+                                                                        \
+  template<typename EncapsRet = _encapsulate_return_type>               \
+  inline EncapsRet                                                      \
+  _consult_method##internal_encaps() const {                            \
+    return _method_encapsulated();                                      \
+  }                                                                     \
 
-#define Make_access(_member_type,                                       \
+
+#define Make_access(_self_type,                                         \
+                    _member_type,                                       \
                     _member_rawptr,                                     \
                     _consult_method,                                    \
                     _access_flag)                                       \
@@ -47,19 +60,46 @@
         _consult_method##const_only                                     \
         };                                                              \
                                                                         \
+  /*global encapsultaion*/                                              \
+  using _consult_method##self_t = _self_type;                           \
+                                                                        \
+  template <typename Tested>                                            \
+  class _consult_method##_has_encaps_method {                           \
+    template <typename C> static char test(                             \
+        decltype(&C::_consult_method##enable_encaps));                  \
+    template <typename C> static long test(...);                        \
+   public:                                                              \
+   enum { value = sizeof(test<Tested>(0)) == sizeof(char) };            \
+  };                                                                    \
+                                                                        \
+                                                                        \
+  template<typename EncapsRet = bool,                                   \
+           typename SelfType = _consult_method##self_t,                 \
+           typename std::                                               \
+           enable_if<(!_consult_method##_has_encaps_method<             \
+                      SelfType>::value)>::type* = nullptr>              \
+  inline EncapsRet _consult_method##internal_encaps() const {           \
+    return true;}                                                       \
+                                                                        \
   /* exposing T const methods accessible by T instance owner*/          \
-  template<typename R,                                                  \
+    template<typename R,                                                \
            typename ...ATs,                                             \
            typename ...BTs>                                             \
   inline R _consult_method(R(_member_type::*fun)(ATs...) const,         \
 			   BTs ...args)	const {                         \
-    return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
+      /* __attribute__((unused)) tells compiler encap is not used*/     \
+      auto encap __attribute__((unused)) =                              \
+          _consult_method##internal_encaps();                           \
+          return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);  \
   }                                                                     \
                                                                         \
   template<typename ...ATs,                                             \
            typename ...BTs>                                             \
   inline void _consult_method(void(_member_type::*fun)(ATs...) const,	\
 			      BTs ...args) const {                      \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _consult_method##internal_encaps();                             \
     ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
   }                                                                     \
                                                                         \
@@ -74,6 +114,9 @@
                    _consult_method##non_const,                          \
                    "consultation is available for const methods only "  \
                    "and delegation is disabled");                       \
+      /* __attribute__((unused)) tells compiler encap is not used*/     \
+      auto encap __attribute__((unused)) =                              \
+          _consult_method##internal_encaps();                           \
     return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
   }                                                                     \
                                                                         \
@@ -86,10 +129,13 @@
                   _consult_method##non_const,                           \
                    "consultation is available for const methods only"   \
                   "and delegation is disabled");                        \
+      /* __attribute__((unused)) tells compiler encap is not used*/     \
+      auto encap __attribute__((unused)) =                              \
+          _consult_method##internal_encaps();                           \
     ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
   }                                                                     \
   
-#define Make_consultable_default(...)                   \
+#define Make_consultable_default(...)           \
   Make_access(__VA_ARGS__, const_only)
 
 #define Make_delegate(...)                      \
@@ -97,7 +143,7 @@
 
 // overloading Make_consultable selection Make_access
 // and Make_consultable according to number of args
-#define Make_consultable_get_overload(_1, _2, _3, _4, NAME,...) NAME
+#define Make_consultable_get_overload(_1, _2, _3, _4, _5, NAME,...) NAME
 #define Make_consultable(...)                                           \
   Make_consultable_get_overload(                                        \
       __VA_ARGS__,                                                      \
