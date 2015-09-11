@@ -27,6 +27,7 @@
 #include <functional>
 #include <type_traits>
 
+
 #define Encapsulate_consultable(_consult_method,                        \
                                 _encapsulate_return_type,               \
                                 _method_encapsulated)                   \
@@ -39,6 +40,26 @@
     return _method_encapsulated();                                      \
   }                                                                     \
 
+#define Overload_consultable(_consult_method,                           \
+                             _delegated_type,                           \
+                             _delegated_method_ptr,                     \
+                             _overload_method)                          \
+  template<decltype(_delegated_method_ptr) = _delegated_method_ptr>     \
+  void _consult_method##_overload(decltype(_delegated_method_ptr)){}    \
+                                                                        \
+template<typename R,                                                    \
+           typename ...ATs,                                             \
+           typename ...BTs,                                             \
+           R (_delegated_type::*)(ATs...) = _delegated_method_ptr,      \
+           typename std::enable_if<                                     \
+      !std::is_same<R, void>::value                                     \
+      && true>::type * = nullptr>                                       \
+      inline R _consult_method(                                         \
+          R(_delegated_type::*fun)(ATs...) const,                       \
+       BTs ...args)	const {                                         \
+    return _overload_method(std::forward<BTs>(args)...);                \
+  }                                                                     \
+  
 
 #define Make_access(_self_type,                                         \
                     _member_type,                                       \
@@ -60,41 +81,61 @@
         _consult_method##const_only                                     \
         };                                                              \
                                                                         \
-  /*global encapsultaion*/                                              \
-  using _consult_method##self_t = _self_type;                           \
-                                                                        \
+  /* --- global encapsultaion*/                                         \
+  /* testing existance of a global ecapsulation method */               \
   template <typename Tested>                                            \
   class _consult_method##_has_encaps_method {                           \
     template <typename C> static char test(                             \
         decltype(&C::_consult_method##enable_encaps));                  \
     template <typename C> static long test(...);                        \
    public:                                                              \
-   enum { value = sizeof(test<Tested>(0)) == sizeof(char) };            \
+   enum { value = sizeof(test<Tested>(nullptr)) == sizeof(char) };      \
   };                                                                    \
-                                                                        \
-                                                                        \
+  /*dummy encaspulation method if none has been declared*/              \
   template<typename EncapsRet = bool,                                   \
-           typename SelfType = _consult_method##self_t,                 \
+           typename SelfType = _self_type,                              \
            typename std::                                               \
            enable_if<(!_consult_method##_has_encaps_method<             \
                       SelfType>::value)>::type* = nullptr>              \
   inline EncapsRet _consult_method##internal_encaps() const {           \
-    return true;}                                                       \
+    return true;                                                        \
+  }                                                                     \
+                                                                        \
+  /* --- selective encapsulation*/                                      \
+  /* testing existance of a specific _consult_method overload */        \
+  template <typename T, typename... Args>                               \
+  class _consult_method##_has_overload {                                \
+    template <typename C,                                               \
+              typename = decltype(                                      \
+                  std::declval<C>()._consult_method(                    \
+                      std::declval<Args>()...) )>                       \
+    static std::true_type test(int);                                    \
+    template <typename C>                                               \
+    static std::false_type test(...);                                   \
+   public:                                                              \
+   static constexpr bool value = decltype(test<T>(0))::value;           \
+  };                                                                    \
                                                                         \
   /* exposing T const methods accessible by T instance owner*/          \
-    template<typename R,                                                \
+  template<typename R,                                                  \
            typename ...ATs,                                             \
-           typename ...BTs>                                             \
-  inline R _consult_method(R(_member_type::*fun)(ATs...) const,         \
-			   BTs ...args)	const {                         \
-      /* __attribute__((unused)) tells compiler encap is not used*/     \
-      auto encap __attribute__((unused)) =                              \
-          _consult_method##internal_encaps();                           \
-          return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);  \
+           typename ...BTs,                                             \
+           R (_member_type::*)(ATs...) = nullptr,                       \
+           typename std::enable_if<                                     \
+      !std::is_same<R, void>::value                                     \
+      && true>::type * = nullptr>  /* FIXME enable_if should be for return*/ \
+  inline R _consult_method(                                             \
+      R(_member_type::*fun)(ATs...) const,                              \
+      BTs ...args) const {                                              \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _consult_method##internal_encaps();                             \
+        return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);    \
   }                                                                     \
                                                                         \
   template<typename ...ATs,                                             \
-           typename ...BTs>                                             \
+           typename ...BTs,                                             \
+           void (_member_type::*)(ATs...) = nullptr>                    \
   inline void _consult_method(void(_member_type::*fun)(ATs...) const,	\
 			      BTs ...args) const {                      \
     /* __attribute__((unused)) tells compiler encap is not used*/       \

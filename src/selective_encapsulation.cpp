@@ -23,32 +23,52 @@
 
 #include <string>
 #include <iostream>
-#include <functional>
 #include "./make-consultable.hpp"
+
+using namespace std;
+
+struct torPrinter{
+  torPrinter(){ cout << "ctor" << endl; }
+  ~torPrinter(){ cout << "dtor" << endl; }
+};
 
 class Widget {
  public:
-  // make a setter consultable from inside the delegate 
-  // set_callback needs to be const and cb_ needs to be mutable
-  void set_callback(std::function<void ()> cb) const {
-    cb_ = cb;
-  }
+  Widget(const string &name): name_(name){}
+  string get_name() const { return name_; }
+  string hello(const string &str) const {return "hello " + str;};
+  void set_name(const string &name) { name_ = name; }
+  
  private:
-  mutable std::function<void()> cb_{nullptr};
+   string name_{};
 };
 
 class WidgetOwner {
  public:
   Make_consultable(WidgetOwner, Widget, &first_, consult_first);
-  
-  private:
-  Widget first_{};
+  Make_consultable(WidgetOwner, Widget, &second_, consult_second);
+
+ private:
+  Widget first_{"first"};
+  Widget second_{"second"};
+  torPrinter encapsulated() const {return torPrinter();}
+  string hello_wrapper(const string &str){
+    string res("overloaded hello" + str);
+    return res;
+  }
+  // return type cannot be void
+  Encapsulate_consultable(consult_first, torPrinter, encapsulated);
+  //Encapsulate_consultable(consult_second, torPrinter, encapsulated);
+  //Overload_consultable(consult_second, Widget, &Widget::hello, hello_wrapper);
 };
 
 int main() {
-  WidgetOwner wo{};
-  // accessing set_name (made const from the Widget)
-  wo.consult_first(&Widget::set_callback,
-                   [](){ std::cout << "callback" << std::endl; });
-  return 0;
+  WidgetOwner wo;                                   // print:
+  cout << wo.consult_first(&Widget::get_name)       // first
+       << wo.consult_second(&Widget::get_name)      // second
+       << wo.consult_second(&Widget::hello, "you")  // hello you
+       << endl;
+  // the following is failling to compile
+  // because Widget::set_name is not const
+  // wo.consult_first(&Widget::set_name, "third");
 }
