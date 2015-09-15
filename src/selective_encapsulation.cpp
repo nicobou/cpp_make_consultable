@@ -47,26 +47,33 @@ class WidgetOwner {
  public:
   Make_consultable(WidgetOwner, Widget, &first_, consult_first);
   Make_consultable(WidgetOwner, Widget, &second_, consult_second);
+  Overload_consultable(consult_second, &Widget::hello, &WidgetOwner::hello_wrapper);
 
+   void mon_test_alternatives(){
+     std::cout << std::boolalpha
+               << (nullptr != consult_secondget_alternative<decltype(&Widget::get_name), &Widget::get_name>())
+               << std::endl;
+   }
  private:
   Widget first_{"first"};
   Widget second_{"second"};
   torPrinter encapsulated() const {return torPrinter();}
-  string hello_wrapper(const string &str){
+  string hello_wrapper(const string &str) const {
     string res("overloaded hello" + str);
     return res;
   }
   // return type cannot be void
   Encapsulate_consultable(consult_first, torPrinter, encapsulated);
   //Encapsulate_consultable(consult_second, torPrinter, encapsulated);
-  //Overload_consultable(consult_second, Widget, &Widget::hello, hello_wrapper);
 };
 
 int main() {
   WidgetOwner wo;                                   // print:
-  cout << wo.consult_first(&Widget::get_name)       // first
-       << wo.consult_second(&Widget::get_name)      // second
-       << wo.consult_second(&Widget::hello, "you")  // hello you
+  wo.mon_test_alternatives();
+  cout 
+      << wo.consult_first(&Widget::get_name)       // first
+      << wo.consult_second2<decltype(&Widget::get_name), &Widget::get_name>()      // second
+      << wo.consult_second2<decltype(&Widget::hello), &Widget::hello>("you")  // hello you
        << endl;
   // the following is failling to compile
   // because Widget::set_name is not const

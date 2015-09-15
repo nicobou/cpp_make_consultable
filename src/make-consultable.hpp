@@ -41,25 +41,23 @@
   }                                                                     \
 
 #define Overload_consultable(_consult_method,                           \
-                             _delegated_type,                           \
                              _delegated_method_ptr,                     \
-                             _overload_method)                          \
-  template<decltype(_delegated_method_ptr) = _delegated_method_ptr>     \
-  void _consult_method##_overload(decltype(_delegated_method_ptr)){}    \
-                                                                        \
-template<typename R,                                                    \
-           typename ...ATs,                                             \
-           typename ...BTs,                                             \
-           R (_delegated_type::*)(ATs...) = _delegated_method_ptr,      \
-           typename std::enable_if<                                     \
-      !std::is_same<R, void>::value                                     \
-      && true>::type * = nullptr>                                       \
-      inline R _consult_method(                                         \
-          R(_delegated_type::*fun)(ATs...) const,                       \
-       BTs ...args)	const {                                         \
-    return _overload_method(std::forward<BTs>(args)...);                \
+                             _alternative_method_ptr)                   \
+  /*FIXME check signatures compatibility*/                              \
+template<typename DUMMY>                                                \
+struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
+                                            _delegated_method_ptr,      \
+                                            DUMMY> {                    \
+  /*FIXME use return type deduction and argument types deduction: */    \
+  static decltype(_delegated_method_ptr) get() {                        \
+    /*reinterpret cast is used for let get method user the alternative*/ \
+    /* method is from expected class, but what we want actually, */     \
+    /* is a function with same return type and arguments*/              \
+    return reinterpret_cast<decltype(_delegated_method_ptr)>(           \
+        _alternative_method_ptr);                                       \
   }                                                                     \
-  
+};                                                                      \
+
 
 #define Make_access(_self_type,                                         \
                     _member_type,                                       \
@@ -83,6 +81,7 @@ template<typename R,                                                    \
                                                                         \
   /* --- global encapsultaion*/                                         \
   /* testing existance of a global ecapsulation method */               \
+  /* FIXME use modern version of this */                                \
   template <typename Tested>                                            \
   class _consult_method##_has_encaps_method {                           \
     template <typename C> static char test(                             \
@@ -102,19 +101,41 @@ template<typename R,                                                    \
   }                                                                     \
                                                                         \
   /* --- selective encapsulation*/                                      \
-  /* testing existance of a specific _consult_method overload */        \
-  template <typename T, typename... Args>                               \
-  class _consult_method##_has_overload {                                \
-    template <typename C,                                               \
-              typename = decltype(                                      \
-                  std::declval<C>()._consult_method(                    \
-                      std::declval<Args>()...) )>                       \
-    static std::true_type test(int);                                    \
-    template <typename C>                                               \
-    static std::false_type test(...);                                   \
-   public:                                                              \
-   static constexpr bool value = decltype(test<T>(0))::value;           \
+  /* no default alternative to delegated method invokation: */          \
+  template<typename MemberType,                                         \
+           MemberType ptr,                                              \
+           typename DUMMY = void>                                       \
+  struct _consult_method##alternative_member_ {                         \
+    static MemberType get(){                                            \
+      return nullptr;                                                   \
+    };                                                                  \
   };                                                                    \
+  /*getting alternative invocation */                                   \
+  template<typename MemberType, MemberType t>                           \
+  static MemberType _consult_method##get_alternative() {                \
+    return _consult_method##alternative_member_<MemberType, t>::get();  \
+  }                                                                     \
+  /*FIXME fun_traits is NOT working*/                                   \
+  template<typename T>                                                  \
+  struct _consult_method##fun_traits;                                   \
+  template<typename R, typename C, typename ...ARGs>                    \
+  struct _consult_method##fun_traits<R(C::*)(ARGs...) const> {          \
+    using return_type = R;                                              \
+  };                                                                    \
+                                                                        \
+  template<typename MMType,                                             \
+           MMType fun,                                                  \
+           typename ...BTs>                                             \
+  inline std::string                                                    \
+  _consult_method##2(BTs ...args) const {                               \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _consult_method##internal_encaps();                             \
+        auto alt = _consult_method##get_alternative<decltype(fun), fun>(); \
+        if(nullptr != alt)                                              \
+          return ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);  \
+        return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);    \
+  }                                                                     \
                                                                         \
   /* exposing T const methods accessible by T instance owner*/          \
   template<typename R,                                                  \
@@ -130,9 +151,9 @@ template<typename R,                                                    \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _consult_method##internal_encaps();                             \
-        return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);    \
+    return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
   }                                                                     \
-                                                                        \
+                                                \
   template<typename ...ATs,                                             \
            typename ...BTs,                                             \
            void (_member_type::*)(ATs...) = nullptr>                    \
