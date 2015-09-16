@@ -46,16 +46,16 @@ class WidgetOwner {
 
 class Box {
  public:
-  Forward_consultable(WidgetOwner, &wo_, consult_first, fwd_first);
-  Forward_consultable(WidgetOwner, &wo_, consult_second, fwd_second);
+  Forward_consultable(Box, WidgetOwner, &wo_, consult_first, fwd_first);
+  Forward_consultable(Box, WidgetOwner, &wo_, consult_second, fwd_second);
  private:
   WidgetOwner wo_;
 };
 
 int main() {
   Box b{};
-  cout << b.fwd_first(&Widget::get_name)   // prints First
-       << b.fwd_second(&Widget::get_name)  // prints Second
+  cout << b.fwd_first2<Method(&Widget::get_name)>()   // prints First
+       << b.fwd_second2<Method(&Widget::get_name)>()  // prints Second
        << endl; 
   return 0;
 }

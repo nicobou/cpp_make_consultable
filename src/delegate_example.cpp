@@ -49,14 +49,13 @@ class WidgetOwner {
   Widget second_{};
 };
 
-// FIXME: enable the following for testing delegate forwarding
-// class Box {
-//  public:
-//   Forward_consultable(Box, WidgetOwner, &wo_, use_first, fwd_first);
-//   Forward_delegate(Box, WidgetOwner, &wo_, use_second, fwd_second);
-//  private:
-//   WidgetOwner wo_;
-// };
+class Box {
+ public:
+  Forward_consultable(Box, WidgetOwner, &wo_, use_first, fwd_first);
+  Forward_delegate(Box, WidgetOwner, &wo_, use_second, fwd_second);
+ private:
+  WidgetOwner wo_;
+};
 
 int main() {
   // testing access when owning WidgetOwner
@@ -66,9 +65,9 @@ int main() {
   cout << wo.use_second2<Method(&Widget::hello)>("you") << endl;  // hello you
 
   // testing access when owning Box 
-  // Box b{};
-  // // compile error first_ is now a consultable:
-  // // cout << b.fwd_first(&Widget::hello, "you") << endl;  
-  // //  OK, second_ is a delegate:
-  // cout << b.fwd_second(&Widget::hello, "you") << endl;   // hello you
+  Box b{};
+  // compile error first_ is now a consultable:
+  //cout << b.fwd_first2<Method(&Widget::hello)>("you") << endl;  
+  //  OK, second_ is a delegate:
+  cout << b.fwd_second2<Method(&Widget::hello)>("you") << endl;   // hello you
 }
