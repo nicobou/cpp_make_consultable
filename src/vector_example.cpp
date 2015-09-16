@@ -43,14 +43,14 @@ class VectorOwner {
 
 int main() {
   VectorOwner wo;                                   // print:
-  cout << wo.consult_first2<Method(&vect_t::size)>()           // 3
-       << wo.consult_second2<Method(&vect_t::size)>()          // 2
-       << *wo.consult_second2<Method(&vect_t::cbegin)>()       // 40
-       << wo.consult_second2<Const_Overload(&vect_t::operator[], vect_t, cref_t, vsize_t)>(1)  // 50
+  cout << wo.consult_first<Method(&vect_t::size)>()           // 3
+       << wo.consult_second<Method(&vect_t::size)>()          // 2
+       << *wo.consult_second<Method(&vect_t::cbegin)>()       // 40
+       << wo.consult_second<Const_Overload(&vect_t::operator[], vect_t, cref_t, vsize_t)>(1)  // 50
        << endl;
 
-  for (auto it = wo.consult_first(&vect_t::cbegin);
-       it !=  wo.consult_first(&vect_t::cend);
+  for (auto it = wo.consult_first<Method(&vect_t::cbegin)>();
+       it !=  wo.consult_first<Method(&vect_t::cend)>();
        ++it) {                                      //102030
     std::cout << *it;                                
   }

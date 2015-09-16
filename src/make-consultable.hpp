@@ -168,7 +168,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                           method_traits<MMType, fun>::return_type>::value, \
             typename nicobou::method_traits<MMType, fun>::return_type \
             >::type                                                     \
-  _consult_method##2(BTs ...args) const {                               \
+  _consult_method(BTs ...args) const {                               \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -190,7 +190,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                          typename nicobou::                         \
                          method_traits<MMType, fun>::return_type>::value\
             >::type                                                     \
-  _consult_method##2(BTs ...args) const {                               \
+  _consult_method(BTs ...args) const {                               \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -215,7 +215,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                           method_traits<MMType, fun>::return_type>::value, \
             typename nicobou::method_traits<MMType, fun>::return_type \
             >::type                                                     \
-  _consult_method##2(BTs ...args) {                                     \
+  _consult_method(BTs ...args) {                                     \
     static_assert(nicobou::method_traits<MMType, fun>::is_const     \
                   || (!nicobou::method_traits<MMType, fun>::is_const \
                       && flag == _consult_method##NonConst_t::          \
@@ -242,7 +242,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                          typename nicobou::                             \
                          method_traits<MMType, fun>::return_type>::value\
             >::type                                                     \
-  _consult_method##2(BTs ...args) {                                     \
+  _consult_method(BTs ...args) {                                     \
     static_assert(nicobou::method_traits<MMType, fun>::is_const         \
                   || (!nicobou::method_traits<MMType, fun>::is_const    \
                       && flag == _consult_method##NonConst_t::          \
@@ -260,55 +260,6 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
           ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);         \
   }                                                                     \
                                                                         \
-                                                                        \
-  /* exposing T const methods accessible by T instance owner*/          \
-  template<typename R,                                                  \
-           typename ...ATs,                                             \
-           typename ...BTs,                                             \
-           R (_member_type::*)(ATs...) = nullptr,                       \
-           typename std::enable_if<                                     \
-      !std::is_same<R, void>::value                                     \
-      && true>::type * = nullptr>  /* FIXME enable_if should be for return*/ \
-  inline R _consult_method(                                             \
-      R(_member_type::*fun)(ATs...) const,                              \
-      BTs ...args) const {                                              \
-    /* __attribute__((unused)) tells compiler encap is not used*/       \
-    return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
-  }                                                                     \
-                                                                        \
-  template<typename ...ATs,                                             \
-           typename ...BTs,                                             \
-           void (_member_type::*)(ATs...) = nullptr>                    \
-  inline void _consult_method(void(_member_type::*fun)(ATs...) const,	\
-			      BTs ...args) const {                      \
-    ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
-  }                                                                     \
-                                                                        \
-  /* disable invokation of non-const if the flag is set*/               \
-  template<typename R,                                                  \
-           typename ...ATs,                                             \
-           typename ...BTs,                                             \
-           int flag=_consult_method##_access_flag>                      \
-  inline R _consult_method(R(_member_type::*fun)(ATs...),               \
-                           BTs ...args) {                               \
-    static_assert(flag == _consult_method##NonConst_t::                 \
-                   _consult_method##non_const,                          \
-                   "consultation is available for const methods only "  \
-                   "and delegation is disabled");                       \
-    return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
-  }                                                                     \
-                                                                        \
-  template<typename ...ATs,                                             \
-           typename ...BTs,                                             \
-           int flag=_consult_method##_access_flag>                      \
-  void _consult_method(void(_member_type::*fun)(ATs...),                \
-                       BTs ...args) {                                   \
-    static_assert(flag == _consult_method##NonConst_t::                 \
-                  _consult_method##non_const,                           \
-                   "consultation is available for const methods only"   \
-                  "and delegation is disabled");                        \
-    ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
-  }                                                                     \
   
 #define Make_consultable_default(...)           \
   Make_access(__VA_ARGS__, const_only)
@@ -395,7 +346,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                           method_traits<MMType, fun>::return_type>::value, \
             typename nicobou::method_traits<MMType, fun>::return_type   \
             >::type                                                     \
-  _fw_method##2(BTs ...args) const {                                    \
+  _fw_method(BTs ...args) const {                                    \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -403,20 +354,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
         _fw_method##internal_encaps();                                  \
         /*FIXME FIXME get alt here*/                                    \
         return (_member_rawptr)->                                       \
-            _consult_method##2<MMType, fun>(std::forward<BTs>(args)...); \
-  }                                                                     \
-                                                                        \
-  template<typename R,                                                  \
-           typename ...ATs,                                             \
-           typename ...BTs>                                             \
-  inline R _fw_method(                                                  \
-      R( _fw_method##Consult_t ::*function)(ATs...) const,              \
-      BTs ...args) const {                                              \
-    return (_member_rawptr)->                                           \
-        _consult_method<R, ATs...>(                                     \
-            std::forward<R( _fw_method##Consult_t ::*)(ATs...) const>(  \
-                function),                                              \
-            std::forward<BTs>(args)...);                                \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
   }                                                                     \
                                                                         \
   template<typename MMType,                                             \
@@ -427,7 +365,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                          typename nicobou::                             \
                          method_traits<MMType, fun>::return_type>::value\
             >::type                                                     \
-  _fw_method##2(BTs ...args) const {                                    \
+  _fw_method(BTs ...args) const {                                    \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -435,20 +373,9 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
         _fw_method##internal_encaps();                                  \
         /*FIXME FIXME get alt here*/                                    \
         (_member_rawptr)->                                              \
-            _consult_method##2<MMType, fun>(std::forward<BTs>(args)...); \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
   }                                                                     \
                                                                         \
-                                                                        \
-  template<typename ...ATs,                                             \
-           typename ...BTs>                                             \
-  inline void _fw_method(                                               \
-      void( _fw_method##Consult_t ::*function)(ATs...) const,           \
-      BTs ...args) const {                                              \
-    (_member_rawptr)->_consult_method<ATs...>(                          \
-        std::forward<void( _fw_method##Consult_t ::*)(ATs...) const>(   \
-            function),                                                  \
-        std::forward<BTs>(args)...);                                    \
-  }									\
                                                                         \
   template<typename MMType,                                             \
            MMType fun,                                                  \
@@ -460,7 +387,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                           method_traits<MMType, fun>::return_type>::value, \
             typename nicobou::method_traits<MMType, fun>::return_type   \
             >::type                                                     \
-  _fw_method##2(BTs ...args) {                                          \
+  _fw_method(BTs ...args) {                                          \
     static_assert(nicobou::method_traits<MMType, fun>::is_const         \
                   || (!nicobou::method_traits<MMType, fun>::is_const    \
                       && flag == _fw_method##NonConst_t::               \
@@ -472,26 +399,9 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
         _fw_method##internal_encaps();                             \
         /* FIXME do alt*/                                               \
         return (_member_rawptr)->                                       \
-            _consult_method##2<MMType, fun>(std::forward<BTs>(args)...); \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
   }                                                                     \
                                                                         \
-  template<typename R,                                                  \
-           typename ...ATs,                                             \
-           typename ...BTs,                                             \
-           int flag=_fw_method##_access_flag>                           \
-  inline R _fw_method(                                                  \
-      R( _fw_method##Consult_t ::*function)(ATs...),                    \
-      BTs ...args) {                                                    \
-    static_assert(flag == _fw_method##NonConst_t::                      \
-                   _fw_method##non_const,                               \
-                  "Forwarded consultation is available for const "      \
-                  "methods only");                                      \
-    return (_member_rawptr)->                                           \
-        _consult_method<R, ATs...>(                                     \
-            std::forward<R( _fw_method##Consult_t ::*)(ATs...)>(        \
-                function),                                              \
-            std::forward<BTs>(args)...);                                \
-  }                                                                     \
                                                                         \
   template<typename MMType,                                             \
            MMType fun,                                                  \
@@ -502,7 +412,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                          typename nicobou::                             \
                          method_traits<MMType, fun>::return_type>::value \
             >::type                                                     \
-  _fw_method##2(BTs ...args) {                                          \
+  _fw_method(BTs ...args) {                                          \
     static_assert(nicobou::method_traits<MMType, fun>::is_const         \
                   || (!nicobou::method_traits<MMType, fun>::is_const    \
                       && flag == _fw_method##NonConst_t::               \
@@ -514,27 +424,12 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
         _fw_method##internal_encaps();                                  \
         /* FIXME do alt*/                                               \
         (_member_rawptr)->                                              \
-            _consult_method##2<MMType, fun>(std::forward<BTs>(args)...); \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
   }                                                                     \
-                                                                        \
-  template<typename ...ATs,                                             \
-           typename ...BTs,                                             \
-           int flag=_fw_method##_access_flag>                           \
-  inline void _fw_method(                                               \
-      void( _fw_method##Consult_t ::*function)(ATs...),                 \
-      BTs ...args) {                                                    \
-    static_assert(flag == _fw_method##NonConst_t::                      \
-                   _fw_method##non_const,                               \
-                   "Forwarded consultation is available for const "     \
-                   "methods only");                                     \
-    (_member_rawptr)->_consult_method<ATs...>(                          \
-        std::forward<void( _fw_method##Consult_t ::*)(ATs...)>(         \
-            function),                                                  \
-        std::forward<BTs>(args)...);                                    \
-  }									\
                                                                         \
                                                                         \
   /*forwarding consult from map if the map key type is defined*/        \
+  /* FIXME convert the following with new consulting */                 \
   template<typename R,                                                  \
            typename ...ATs,                                             \
            typename ...BTs,                                             \

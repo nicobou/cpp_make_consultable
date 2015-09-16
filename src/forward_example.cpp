@@ -54,8 +54,8 @@ class Box {
 
 int main() {
   Box b{};
-  cout << b.fwd_first2<Method(&Widget::get_name)>()   // prints First
-       << b.fwd_second2<Method(&Widget::get_name)>()  // prints Second
+  cout << b.fwd_first<Method(&Widget::get_name)>()   // prints First
+       << b.fwd_second<Method(&Widget::get_name)>()  // prints Second
        << endl; 
   return 0;
 }

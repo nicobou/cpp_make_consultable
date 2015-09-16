@@ -48,7 +48,7 @@ class WidgetOwner {
 int main() {
   WidgetOwner wo{};
   // accessing set_name (made const from the Widget)
-  wo.consult_first2<Method(&Widget::set_callback)>(
+  wo.consult_first<Method(&Widget::set_callback)>(
       [](){ std::cout << "callback" << std::endl; });
   return 0;
 }
