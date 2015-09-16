@@ -49,11 +49,6 @@ class WidgetOwner {
   Make_consultable(WidgetOwner, Widget, &second_, consult_second);
   Overload_consultable(consult_second, &Widget::hello, &WidgetOwner::hello_wrapper);
 
-   void mon_test_alternatives(){
-     std::cout << std::boolalpha
-               << (nullptr != consult_secondget_alternative<decltype(&Widget::get_name), &Widget::get_name>())
-               << std::endl;
-   }
  private:
   Widget first_{"first"};
   Widget second_{"second"};
@@ -69,7 +64,6 @@ class WidgetOwner {
 
 int main() {
   WidgetOwner wo;                                   // print:
-  wo.mon_test_alternatives();
   cout 
       << wo.consult_first(&Widget::get_name)       // first
       << wo.consult_second2<decltype(&Widget::get_name), &Widget::get_name>()      // second

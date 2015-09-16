@@ -26,7 +26,32 @@
 
 #include <functional>
 #include <type_traits>
+#include <cstddef> // size_t
+#include <tuple>  // method_traits args
 
+namespace consult {
+template<typename F, F f>
+struct method_traits;
+
+// const member function pointer
+template<typename C, typename R, typename ...Args, R (C::*fn_ptr)(Args... ) const >
+struct method_traits<R(C::*)(Args...) const, fn_ptr>
+{
+  using return_type = R;
+  using method_t = R(C::*)(Args...) const;
+  static constexpr method_t ptr = fn_ptr;
+};
+
+// member function pointer
+template<typename C, typename R, typename ...Args, R (C::*fn_ptr)(Args... ) >
+struct method_traits<R(C::*)(Args...), fn_ptr>
+{
+  using return_type = R;
+  using method_t = R(C::*)(Args...);
+  static constexpr method_t ptr = fn_ptr;
+};
+
+}  // namespace consult
 
 #define Encapsulate_consultable(_consult_method,                        \
                                 _encapsulate_return_type,               \
@@ -115,18 +140,11 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
   static MemberType _consult_method##get_alternative() {                \
     return _consult_method##alternative_member_<MemberType, t>::get();  \
   }                                                                     \
-  /*FIXME fun_traits is NOT working*/                                   \
-  template<typename T>                                                  \
-  struct _consult_method##fun_traits;                                   \
-  template<typename R, typename C, typename ...ARGs>                    \
-  struct _consult_method##fun_traits<R(C::*)(ARGs...) const> {          \
-    using return_type = R;                                              \
-  };                                                                    \
                                                                         \
   template<typename MMType,                                             \
            MMType fun,                                                  \
            typename ...BTs>                                             \
-  inline std::string                                                    \
+  inline typename consult::method_traits<MMType, fun>::return_type      \
   _consult_method##2(BTs ...args) const {                               \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
