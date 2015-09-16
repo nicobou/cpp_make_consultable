@@ -49,25 +49,26 @@ class WidgetOwner {
   Widget second_{};
 };
 
-class Box {
- public:
-  Forward_consultable(WidgetOwner, &wo_, use_first, fwd_first);
-  Forward_delegate(WidgetOwner, &wo_, use_second, fwd_second);
- private:
-  WidgetOwner wo_;
-};
+// FIXME: enable the following for testing delegate forwarding
+// class Box {
+//  public:
+//   Forward_consultable(Box, WidgetOwner, &wo_, use_first, fwd_first);
+//   Forward_delegate(Box, WidgetOwner, &wo_, use_second, fwd_second);
+//  private:
+//   WidgetOwner wo_;
+// };
 
 int main() {
   // testing access when owning WidgetOwner
   WidgetOwner wo{};
   // both invokation are allowed since first_ and second are delegated
-  cout << wo.use_first(&Widget::hello, "you") << endl;   // hello you
-  cout << wo.use_second(&Widget::hello, "you") << endl;  // hello you
+  cout << wo.use_first2<Method(&Widget::hello)>("you") << endl;   // hello you
+  cout << wo.use_second2<Method(&Widget::hello)>("you") << endl;  // hello you
 
   // testing access when owning Box 
-  Box b{};
-  // compile error first_ is now a consultable:
-  // cout << b.fwd_first(&Widget::hello, "you") << endl;  
-  //  OK, second_ is a delegate:
-  cout << b.fwd_second(&Widget::hello, "you") << endl;   // hello you
+  // Box b{};
+  // // compile error first_ is now a consultable:
+  // // cout << b.fwd_first(&Widget::hello, "you") << endl;  
+  // //  OK, second_ is a delegate:
+  // cout << b.fwd_second(&Widget::hello, "you") << endl;   // hello you
 }
