@@ -28,8 +28,8 @@
 using namespace std;
 
 struct torPrinter{
-  torPrinter(){ cout << "ctor" << endl; }
-  ~torPrinter(){ cout << "dtor" << endl; }
+  torPrinter(){ cout << "ctor "; }
+  ~torPrinter(){ cout << "dtor\n"; }
 };
 
 class Widget {
@@ -58,7 +58,7 @@ class WidgetOwner {
     return res;
   }
   // return type cannot be void
-  //Encapsulate_consultable(consult_second, torPrinter, encapsulated);
+  Encapsulate_consultable(consult_second, torPrinter, encapsulated);
 };
 
 int main() {

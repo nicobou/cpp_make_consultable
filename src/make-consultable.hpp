@@ -70,14 +70,14 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
 #define Encapsulate_consultable(_consult_method,                        \
                                 _encapsulate_return_type,               \
                                 _method_encapsulated)                   \
-  template <typename DUMMY>                                             \
-  struct _consult_method##encaps_ret<bool, DUMMY>{                      \
-    using encaps_return_t = _encapsulate_return_type;                   \
-    static inline encaps_return_t global_encaps() {                     \
-      std::cout << "coucou" << std::endl;                               \
-      return _encapsulate_return_type();                                \
-    }                                                                   \
-  };  
+  static void _consult_method##enable_encaps(){}                        \
+                                                                        \
+  template<typename EncapsRet = _encapsulate_return_type>               \
+  inline EncapsRet                                                      \
+  _consult_method##internal_encaps() const {                            \
+    return _method_encapsulated();                                      \
+  }                                                                     \
+
 
 #define Overload_consultable(_consult_method,                           \
                              _delegated_method_ptr,                     \
@@ -96,6 +96,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
         _alternative_method_ptr);                                       \
   }                                                                     \
 };                                                                      \
+
 
 
 #define Make_access(_self_type,                                         \
@@ -129,29 +130,14 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
    public:                                                              \
    enum { value = sizeof(test<Tested>(nullptr)) == sizeof(char) };      \
   };                                                                    \
-                                                                        \
-  template <typename FlagType, typename DUMMY = void>                   \
-  struct _consult_method##encaps_ret{                                   \
-    using unused_type = FlagType;                                       \
-    using encaps_return_t = bool;                                       \
-    static inline encaps_return_t global_encaps() {                     \
-      return true;                                                      \
-    }                                                                   \
-  };                                                                    \
-  /* FIXME get a type to allocate to encaps_return_t */                 \
-  template <typename DUMMY>                                             \
-  struct _consult_method##encaps_ret<bool, DUMMY>{                      \
-    using encaps_return_t = int;                                        \
-    static inline encaps_return_t global_encaps() {                     \
-      return encaps_return_t();                                         \
-    }                                                                   \
-  };                                                                    \
-                                                                        \
-/*getting alternative invocation */                                     \
-  template<typename FlagType>                                           \
-  static typename _consult_method##encaps_ret<FlagType>::encaps_return_t \
-  _consult_method##get_global_encaps(){                                 \
-    return _consult_method##encaps_ret<FlagType>::global_encaps();      \
+  /*dummy encaspulation method if none has been declared*/              \
+  template<typename EncapsRet = bool,                                   \
+           typename SelfType = _self_type,                              \
+           typename std::                                               \
+           enable_if<(!_consult_method##_has_encaps_method<             \
+                      SelfType>::value)>::type* = nullptr>              \
+  inline EncapsRet _consult_method##internal_encaps() const {           \
+    return true;                                                        \
   }                                                                     \
                                                                         \
   /* --- selective encapsulation*/                                      \
@@ -185,7 +171,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
-        _consult_method##get_global_encaps<bool>();                     \
+        _consult_method##internal_encaps();                             \
         auto alt =                                                      \
             _consult_method##get_alternative<decltype(fun), fun>();     \
         if(nullptr != alt)                                              \
@@ -207,7 +193,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
-        _consult_method##get_global_encaps<bool>();                     \
+        _consult_method##internal_encaps();                             \
     auto alt =                                                          \
         _consult_method##get_alternative<decltype(fun), fun>();         \
         if(nullptr != alt)                                              \
@@ -236,7 +222,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                   " (delegation is disabled)");                          \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
-        _consult_method##get_global_encaps<bool>();                     \
+        _consult_method##internal_encaps();                             \
         auto alt =                                                      \
             _consult_method##get_alternative<decltype(fun), fun>();     \
         if(nullptr != alt)                                              \
@@ -263,7 +249,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                   "(delegation is disabled)");                          \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
-        _consult_method##get_global_encaps<bool>();                     \
+        _consult_method##internal_encaps();                             \
     auto alt =                                                          \
         _consult_method##get_alternative<decltype(fun), fun>();         \
         if(nullptr != alt)                                              \
