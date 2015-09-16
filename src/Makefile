@@ -8,6 +8,7 @@ all: \
     selective_encapsulation
 
 
+
 basic_example: basic_example.cpp
 	g++ -std=c++11 -o basic_example-gcc -Wall -Werror -Wfatal-errors basic_example.cpp 
 	clang++ -std=c++11 -o basic_example-clang -Wall -Werror -Wfatal-errors basic_example.cpp 

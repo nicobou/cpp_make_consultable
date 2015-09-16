@@ -29,7 +29,7 @@
 #include <cstddef> // size_t
 #include <tuple>  // method_traits args
 
-namespace consult {
+namespace nicobou {
 template<typename F, F f>
 struct method_traits;
 
@@ -40,6 +40,7 @@ struct method_traits<R(C::*)(Args...) const, fn_ptr>
   using return_type = R;
   using method_t = R(C::*)(Args...) const;
   static constexpr method_t ptr = fn_ptr;
+  static constexpr bool is_const = true;
 };
 
 // member function pointer
@@ -49,21 +50,34 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
   using return_type = R;
   using method_t = R(C::*)(Args...);
   static constexpr method_t ptr = fn_ptr;
+  static constexpr bool is_const = false;
 };
 
-}  // namespace consult
+}  // namespace nicobou
 
+// selecting method and Overload for template parameter of consultation method
+#define Method(_method_ptr)                     \
+  decltype(_method_ptr), _method_ptr            
+
+#define Overload(_PTR, _C, _R, ...)             \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR)), _PTR
+
+#define Const_Overload(_PTR, _C, _R, ...)               \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR)), _PTR
+
+
+// encapsulation:
 #define Encapsulate_consultable(_consult_method,                        \
                                 _encapsulate_return_type,               \
                                 _method_encapsulated)                   \
-                                                                        \
-  static void _consult_method##enable_encaps(){}                        \
-                                                                        \
-  template<typename EncapsRet = _encapsulate_return_type>               \
-  inline EncapsRet                                                      \
-  _consult_method##internal_encaps() const {                            \
-    return _method_encapsulated();                                      \
-  }                                                                     \
+  template <typename DUMMY>                                             \
+  struct _consult_method##encaps_ret<bool, DUMMY>{                      \
+    using encaps_return_t = _encapsulate_return_type;                   \
+    static inline encaps_return_t global_encaps() {                     \
+      std::cout << "coucou" << std::endl;                               \
+      return _encapsulate_return_type();                                \
+    }                                                                   \
+  };  
 
 #define Overload_consultable(_consult_method,                           \
                              _delegated_method_ptr,                     \
@@ -115,14 +129,29 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
    public:                                                              \
    enum { value = sizeof(test<Tested>(nullptr)) == sizeof(char) };      \
   };                                                                    \
-  /*dummy encaspulation method if none has been declared*/              \
-  template<typename EncapsRet = bool,                                   \
-           typename SelfType = _self_type,                              \
-           typename std::                                               \
-           enable_if<(!_consult_method##_has_encaps_method<             \
-                      SelfType>::value)>::type* = nullptr>              \
-  inline EncapsRet _consult_method##internal_encaps() const {           \
-    return true;                                                        \
+                                                                        \
+  template <typename FlagType, typename DUMMY = void>                   \
+  struct _consult_method##encaps_ret{                                   \
+    using unused_type = FlagType;                                       \
+    using encaps_return_t = bool;                                       \
+    static inline encaps_return_t global_encaps() {                     \
+      return true;                                                      \
+    }                                                                   \
+  };                                                                    \
+  /* FIXME get a type to allocate to encaps_return_t */                 \
+  template <typename DUMMY>                                             \
+  struct _consult_method##encaps_ret<bool, DUMMY>{                      \
+    using encaps_return_t = int;                                        \
+    static inline encaps_return_t global_encaps() {                     \
+      return encaps_return_t();                                         \
+    }                                                                   \
+  };                                                                    \
+                                                                        \
+/*getting alternative invocation */                                     \
+  template<typename FlagType>                                           \
+  static typename _consult_method##encaps_ret<FlagType>::encaps_return_t \
+  _consult_method##get_global_encaps(){                                 \
+    return _consult_method##encaps_ret<FlagType>::global_encaps();      \
   }                                                                     \
                                                                         \
   /* --- selective encapsulation*/                                      \
@@ -141,19 +170,108 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
     return _consult_method##alternative_member_<MemberType, t>::get();  \
   }                                                                     \
                                                                         \
+  /* const and non void return  */                                      \
   template<typename MMType,                                             \
            MMType fun,                                                  \
            typename ...BTs>                                             \
-  inline typename consult::method_traits<MMType, fun>::return_type      \
+  inline typename std::                                                 \
+  enable_if<!std::is_same<void,                                         \
+                          typename nicobou::                        \
+                          method_traits<MMType, fun>::return_type>::value, \
+            typename nicobou::method_traits<MMType, fun>::return_type \
+            >::type                                                     \
   _consult_method##2(BTs ...args) const {                               \
+    static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
+                  "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
-        _consult_method##internal_encaps();                             \
-        auto alt = _consult_method##get_alternative<decltype(fun), fun>(); \
+        _consult_method##get_global_encaps<bool>();                     \
+        auto alt =                                                      \
+            _consult_method##get_alternative<decltype(fun), fun>();     \
         if(nullptr != alt)                                              \
           return ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);  \
         return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);    \
   }                                                                     \
+                                                                        \
+  /*const and void returning*/                                          \
+  template<typename MMType,                                             \
+           MMType fun,                                                  \
+           typename ...BTs>                                             \
+  inline typename std::                                                 \
+  enable_if<std::is_same<void,                                          \
+                         typename nicobou::                         \
+                         method_traits<MMType, fun>::return_type>::value\
+            >::type                                                     \
+  _consult_method##2(BTs ...args) const {                               \
+    static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
+                  "consultation is available for const methods only");  \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _consult_method##get_global_encaps<bool>();                     \
+    auto alt =                                                          \
+        _consult_method##get_alternative<decltype(fun), fun>();         \
+        if(nullptr != alt)                                              \
+          ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);         \
+        else                                                            \
+          ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);         \
+  }                                                                     \
+                                                                        \
+  /* non const and non void return  */                                  \
+  template<typename MMType,                                             \
+           MMType fun,                                                  \
+           typename ...BTs,                                             \
+           int flag=_consult_method##_access_flag>                      \
+  inline typename std::                                                 \
+  enable_if<!std::is_same<void,                                         \
+                          typename nicobou::                        \
+                          method_traits<MMType, fun>::return_type>::value, \
+            typename nicobou::method_traits<MMType, fun>::return_type \
+            >::type                                                     \
+  _consult_method##2(BTs ...args) {                                     \
+    static_assert(nicobou::method_traits<MMType, fun>::is_const     \
+                  || (!nicobou::method_traits<MMType, fun>::is_const \
+                      && flag == _consult_method##NonConst_t::          \
+                      _consult_method##non_const),                      \
+                  "consultation is available for const methods only"    \
+                  " (delegation is disabled)");                          \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _consult_method##get_global_encaps<bool>();                     \
+        auto alt =                                                      \
+            _consult_method##get_alternative<decltype(fun), fun>();     \
+        if(nullptr != alt)                                              \
+          return ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);  \
+        return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);    \
+  }                                                                     \
+                                                                        \
+  /*const and void returning*/                                          \
+  template<typename MMType,                                             \
+           MMType fun,                                                  \
+           typename ...BTs,                                             \
+           int flag=_consult_method##_access_flag>                      \
+  inline typename std::                                                 \
+  enable_if<std::is_same<void,                                          \
+                         typename nicobou::                         \
+                         method_traits<MMType, fun>::return_type>::value\
+            >::type                                                     \
+  _consult_method##2(BTs ...args) {                                     \
+    static_assert(nicobou::method_traits<MMType, fun>::is_const         \
+                  || (!nicobou::method_traits<MMType, fun>::is_const    \
+                      && flag == _consult_method##NonConst_t::          \
+                      _consult_method##non_const),                      \
+                  "consultation is available for const methods only"    \
+                  "(delegation is disabled)");                          \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _consult_method##get_global_encaps<bool>();                     \
+    auto alt =                                                          \
+        _consult_method##get_alternative<decltype(fun), fun>();         \
+        if(nullptr != alt)                                              \
+          ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);         \
+        else                                                            \
+          ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);         \
+  }                                                                     \
+                                                                        \
                                                                         \
   /* exposing T const methods accessible by T instance owner*/          \
   template<typename R,                                                  \
@@ -167,8 +285,6 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
       R(_member_type::*fun)(ATs...) const,                              \
       BTs ...args) const {                                              \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
-    auto encap __attribute__((unused)) =                                \
-        _consult_method##internal_encaps();                             \
     return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
   }                                                                     \
                                                 \
@@ -177,9 +293,6 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
            void (_member_type::*)(ATs...) = nullptr>                    \
   inline void _consult_method(void(_member_type::*fun)(ATs...) const,	\
 			      BTs ...args) const {                      \
-    /* __attribute__((unused)) tells compiler encap is not used*/       \
-    auto encap __attribute__((unused)) =                                \
-        _consult_method##internal_encaps();                             \
     ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
   }                                                                     \
                                                                         \
@@ -194,9 +307,6 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                    _consult_method##non_const,                          \
                    "consultation is available for const methods only "  \
                    "and delegation is disabled");                       \
-      /* __attribute__((unused)) tells compiler encap is not used*/     \
-      auto encap __attribute__((unused)) =                              \
-          _consult_method##internal_encaps();                           \
     return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);        \
   }                                                                     \
                                                                         \
@@ -209,9 +319,6 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                   _consult_method##non_const,                           \
                    "consultation is available for const methods only"   \
                   "and delegation is disabled");                        \
-      /* __attribute__((unused)) tells compiler encap is not used*/     \
-      auto encap __attribute__((unused)) =                              \
-          _consult_method##internal_encaps();                           \
     ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);               \
   }                                                                     \
   
@@ -227,7 +334,7 @@ struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
 #define Make_consultable(...)                                           \
   Make_consultable_get_overload(                                        \
       __VA_ARGS__,                                                      \
-      Make_access,                                            \
+      Make_access,                                                      \
       Make_consultable_default)(__VA_ARGS__)
 
 

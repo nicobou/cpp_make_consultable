@@ -58,18 +58,17 @@ class WidgetOwner {
     return res;
   }
   // return type cannot be void
-  Encapsulate_consultable(consult_first, torPrinter, encapsulated);
   //Encapsulate_consultable(consult_second, torPrinter, encapsulated);
 };
 
 int main() {
   WidgetOwner wo;                                   // print:
   cout 
-      << wo.consult_first(&Widget::get_name)       // first
-      << wo.consult_second2<decltype(&Widget::get_name), &Widget::get_name>()      // second
-      << wo.consult_second2<decltype(&Widget::hello), &Widget::hello>("you")  // hello you
+      << wo.consult_first2<Method(&Widget::get_name)>()       // first
+      << wo.consult_second2<Method(&Widget::get_name)>()      // second
+      << wo.consult_second2<Method(&Widget::hello)>("you")  // hello you
        << endl;
   // the following is failling to compile
   // because Widget::set_name is not const
-  // wo.consult_first(&Widget::set_name, "third");
+  //wo.consult_first2<Method(&Widget::set_name)>("third");
 }

@@ -49,16 +49,18 @@ int main() {
   WidgetOwner wo{};
   // in case of overloads, signature types give as template parameter
   // allows to distinguishing which overload to select
-  cout << wo.consult_first<string>(&Widget::hello)    // hello
-       << wo.consult_first<string, const string &>(
-           &Widget::hello, std::string("ho"))        // hello you
+  cout  << wo.consult_first2<Const_Overload(&Widget::hello, Widget, string)>()  // hello
+        << endl
+        << wo.consult_first2<Const_Overload(&Widget::hello, Widget, string, const string &)>(
+            std::string("you"))                                                 // hello you
+        << endl;
+  
+  // static_cast allows for more verbosely selecting the wanted
+  cout << wo.consult_first2<
+    decltype(static_cast<string(Widget::*)() const>(&Widget::hello)),
+            &Widget::hello                                                       // hello
+            >()
        << endl;
-       
-       // static_cast allows for more verbosely selecting the wanted
-       cout << wo.consult_first(
-           static_cast<string(Widget::*)(const string &) const>(&Widget::hello),
-           "you")                                     // hello you
-            << endl;
-       
+  
   return 0;
 }
