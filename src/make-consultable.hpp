@@ -85,12 +85,13 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
                              _delegated_method_ptr,                     \
                              _alternative_method_ptr)                   \
   /*FIXME check signatures compatibility*/                              \
-template<typename DUMMY>                                                \
-struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
-                                            _delegated_method_ptr,      \
-                                            DUMMY> {                    \
-  /*FIXME use return type deduction and argument types deduction: */    \
-  static decltype(_delegated_method_ptr) get() {                        \
+  /*FIXME return a fun_t like type in order to enable it when forwarding*/ \
+  template<typename DUMMY>                                              \
+  struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
+                                              _delegated_method_ptr,    \
+                                              DUMMY> {                  \
+    /*FIXME use return type deduction and argument types deduction: */  \
+    static decltype(_delegated_method_ptr) get() {                      \
     /*reinterpret cast is used for let get method user the alternative*/ \
     /* method is from expected class, but what we want actually, */     \
     /* is a function with same return type and arguments*/              \
