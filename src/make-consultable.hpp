@@ -83,12 +83,17 @@ struct method_convert<R(C::*)(Args...), T>{
 #define Method(_method_ptr)                     \
   decltype(_method_ptr), _method_ptr            
 
-#define Overload(_PTR, _C, _R, ...)             \
+#define Overload(_PTR, _C, _R, ...)                             \
   decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR)), _PTR
 
-#define Const_Overload(_PTR, _C, _R, ...)               \
+#define Const_Overload(_PTR, _C, _R, ...)                               \
   decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR)), _PTR
 
+#define Const_Overload_Type(_PTR, _C, _R, ...)                  \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR))
+
+#define Overload_Type(_PTR, _C, _R, ...)                \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR))
 
 // encapsulation:
 #define Encapsulate_consultable(_consult_method,                        \
@@ -103,17 +108,18 @@ struct method_convert<R(C::*)(Args...), T>{
   }                                                                     \
 
 #define Overload_consultable(_consult_or_fw_method,                     \
+                             _delegated_method_type,                    \
                              _delegated_method_ptr,                     \
                              _alternative_method_ptr)                   \
 template<typename DUMMY>                                                \
 struct _consult_or_fw_method##alternative_member_<                      \
-     decltype(_delegated_method_ptr),                                   \
+     _delegated_method_type,                                            \
      _delegated_method_ptr,                                             \
      DUMMY> {                                                           \
   /* cannot static assert here because _alternative_method_ptr */       \
   /* is possibly not yet declared */                                    \
   static typename nicobou::                                             \
-    method_convert<decltype(_delegated_method_ptr),                     \
+    method_convert<_delegated_method_type,                              \
                    _consult_or_fw_method##self_type>::type              \
     get() {                                                             \
       return _alternative_method_ptr;                                   \

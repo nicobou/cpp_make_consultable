@@ -47,7 +47,10 @@ class WidgetOwner {
  public:
   Make_consultable(WidgetOwner, Widget, &first_, consult_first);
   Make_consultable(WidgetOwner, Widget, &second_, consult_second);
-  Overload_consultable(consult_second, &Widget::hello, &WidgetOwner::hello_wrapper);
+  Overload_consultable(consult_second,
+                       decltype(&Widget::hello),
+                       &Widget::hello,
+                       &WidgetOwner::hello_wrapper);
 
  private:
   Widget first_{"first"};

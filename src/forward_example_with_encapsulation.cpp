@@ -31,6 +31,7 @@ class Widget {
  public:
   Widget(const string &str): name_(str){}
   string get_name() const {return name_;}
+  string get_name(int a) const {return name_ + std::to_string(a);}
  private:
   string name_;
 };
@@ -48,7 +49,10 @@ class Box {
  public:
   Forward_consultable(Box, WidgetOwner, &wo_, consult_first, fwd_first);
   Forward_consultable(Box, WidgetOwner, &wo_, consult_second, fwd_second);
-  Overload_consultable(fwd_second, &Widget::get_name, &Box::get_name_wrapper);
+  Overload_consultable(fwd_second,
+                       Const_Overload_Type(&Widget::get_name, Widget, string),
+                       &Widget::get_name,
+                       &Box::get_name_wrapper);
  private:
   WidgetOwner wo_;
   string get_name_wrapper() const {return "box";}
@@ -63,8 +67,8 @@ class Box {
 
 int main() {
   Box b{};
-  cout << b.fwd_first<Method(&Widget::get_name)>()   // prints First
-       << b.fwd_second<Method(&Widget::get_name)>()  // prints Second
+  cout << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string)>()   // prints First
+       << b.fwd_second<Const_Overload(&Widget::get_name, Widget, string, int)>(2)  // prints Second2
        << endl; 
   return 0;
 }
