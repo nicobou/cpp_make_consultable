@@ -73,15 +73,15 @@ class Box {
   mutable std::map<int, std::unique_ptr<WidgetOwner>> wos_;
   
   // will be used by Forward_consultable_from_associative_container
-  std::pair<bool, WidgetOwner *> find_wos_element(int val) const{
-    auto it = wos_.find(val);
+  std::pair<bool, WidgetOwner *> find_wos_element(int key) const{
+    auto it = wos_.find(key);
     if (wos_.end() == it){
       return std::make_pair(false, nullptr);
     }
     return std::make_pair(true, it->second.get());
   };
   // construct result to pass when element has not been not found:
-  WidgetOwner construct_error_return() const{
+  WidgetOwner construct_error_return(int /*key*/) const{
     assert(false); // bug
     return WidgetOwner();
   }

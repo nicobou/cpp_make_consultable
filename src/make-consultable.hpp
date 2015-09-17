@@ -619,7 +619,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
       /* finding object */                                              \
       auto consultable = _accessor_method (key);                        \
       if (!std::get<0>(consultable))                                    \
-        return _on_error_construct_ret_method().                        \
+        return _on_error_construct_ret_method(key).                        \
             _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
       /*we have the object, continue*/                                  \
       /* __attribute__((unused)) tells compiler encap is not used: */   \
@@ -649,7 +649,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
       /* finding object */                                              \
     auto consultable = _accessor_method(key);                           \
     if (!std::get<0>(consultable))                                      \
-        return _on_error_construct_ret_method().                        \
+      return _on_error_construct_ret_method(key).                       \
             _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
       /* __attribute__((unused)) tells compiler encap is not used*/     \
     auto encap __attribute__((unused)) =                                \
