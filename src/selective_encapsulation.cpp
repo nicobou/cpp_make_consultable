@@ -40,17 +40,17 @@ class Widget {
   void set_name(const string &name) { name_ = name; }
   
  private:
-   string name_{};
+  string name_{};
 };
 
 class WidgetOwner {
  public:
   Make_consultable(WidgetOwner, Widget, &first_, consult_first);
   Make_consultable(WidgetOwner, Widget, &second_, consult_second);
-  Selective_encapsulation(consult_second,
-                          decltype(&Widget::hello),
-                          &Widget::hello,
-                          &WidgetOwner::hello_wrapper);
+  Selective_hook(consult_second,
+                 decltype(&Widget::hello),
+                 &Widget::hello,
+                 &WidgetOwner::hello_wrapper);
 
  private:
   Widget first_{"first"};
@@ -62,11 +62,11 @@ class WidgetOwner {
   }
   // encapsulation for each call by user (global encapsulation)
   torPrinter encapsulated() const {return torPrinter();}
-  Global_encapsulation(consult_second, torPrinter, encapsulated);
+  Global_wrap(consult_second, torPrinter, encapsulated);
 };
 
 int main() {
-  WidgetOwner wo;                                   // print:
+  WidgetOwner wo;                                                   // print:
   cout << wo.consult_first<Method(&Widget::get_name)>() << endl;    // first
   cout << wo.consult_second<Method(&Widget::get_name)>() << endl;   // second
   cout << wo.consult_second<Method(&Widget::hello)>("you") << endl; // hello you

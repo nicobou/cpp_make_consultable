@@ -44,7 +44,7 @@ class WidgetOwner {
   Make_delegate(WidgetOwner, Widget, &first_, use_first);
   Make_delegate(WidgetOwner, Widget, &second_, use_second);
   
-  private:
+ private:
   Widget first_{};
   Widget second_{};
 };
@@ -67,7 +67,7 @@ int main() {
   // testing access when owning Box 
   Box b{};
   // compile error first_ is now a consultable:
-  //cout << b.fwd_first<Method(&Widget::hello)>("you") << endl;  
+  // cout << b.fwd_first<Method(&Widget::hello)>("you") << endl;  
   //  OK, second_ is a delegate:
   cout << b.fwd_second<Method(&Widget::hello)>("you") << endl;   // hello you
 }

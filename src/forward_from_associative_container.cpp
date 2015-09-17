@@ -63,10 +63,10 @@ class Box {
       consult_first,
       fwd_first);
   // selective encapsulation of string Widget::get_name(int)
-  Selective_encapsulation(fwd_first,
-                       Const_Overload_Type(&Widget::get_name, Widget, string, int),
-                       &Widget::get_name,
-                       &Box::get_name_wrapper);
+  Selective_hook(fwd_first,
+                 Const_Overload_Type(&Widget::get_name, Widget, string, int),
+                 &Widget::get_name,
+                 &Box::get_name_wrapper);
 
  private:
   // container must be mutable in order to access it from const methods
@@ -93,17 +93,17 @@ class Box {
     ~torPrinter(){ cout << "dtor\n"; }
   };
   torPrinter encapsulated() const {return torPrinter();}
-  Global_encapsulation(fwd_first, torPrinter, encapsulated);
+  Global_wrap(fwd_first, torPrinter, encapsulated);
 };  // class Box
 
 class BoxOwner{
  public:
   Forward_consultable(BoxOwner, Box, &b_, fwd_first, fwd_last);
   // selective encapsulation of string Widget::get_name(int)
-  Selective_encapsulation(fwd_last,
-                       Const_Overload_Type(&Widget::get_name, Widget, string, int),
-                       &Widget::get_name,
-                       &BoxOwner::get_name_wrapper);
+  Selective_hook(fwd_last,
+                 Const_Overload_Type(&Widget::get_name, Widget, string, int),
+                 &Widget::get_name,
+                 &BoxOwner::get_name_wrapper);
  private:
   Box b_{};
 
@@ -114,7 +114,7 @@ class BoxOwner{
     ~torPrinter(){ cout << "ddtor\n"; }
   };
   torPrinter encapsulated() const {return torPrinter();}
-  Global_encapsulation(fwd_last, torPrinter, encapsulated);
+  Global_wrap(fwd_last, torPrinter, encapsulated);
 };
 
 int main() {
@@ -129,15 +129,15 @@ int main() {
          << endl; 
   }
 
-   {  // testing the use of forwaring after forwarding from container
-     BoxOwner bo{};
-     // prints "First"
-     cout  << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
-           << endl;
+  {  // testing the use of forwaring after forwarding from container
+    BoxOwner bo{};
+    // prints "First"
+    cout  << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
+          << endl;
     // prints "34 from box" 
     cout << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string, int)>(1234, 34)   
          << endl; 
-   }
+  }
 
   return 0;
 }

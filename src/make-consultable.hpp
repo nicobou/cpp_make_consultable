@@ -75,7 +75,8 @@ struct method_traits<R(C::*)(Args...), fn_ptr>{
   static constexpr bool is_const = false;
 };
 
-// copy a method signature from a class and make the equivalenent signature but as a member of an other type
+// copy a method signature from a class and make the equivalenent
+// signature but as a member of an other type
 template<typename M, typename T>
 struct method_convert;
 // const
@@ -98,9 +99,9 @@ struct method_convert<R(C::*)(Args...), T>{
 }  // namespace nicobou
 
 // encapsulation:
-#define Global_encapsulation(_consult_method,                        \
-                                _encapsulate_return_type,               \
-                                _method_encapsulated)                   \
+#define Global_wrap(_consult_method,                                    \
+                    _encapsulate_return_type,                           \
+                    _method_encapsulated)                               \
   static void _consult_method##enable_encaps(){}                        \
                                                                         \
   template<typename EncapsRet = _encapsulate_return_type>               \
@@ -109,10 +110,10 @@ struct method_convert<R(C::*)(Args...), T>{
     return _method_encapsulated();                                      \
   }                                                                     \
 
-#define Selective_encapsulation(_consult_or_fw_method,                     \
-                             _delegated_method_type,                    \
-                             _delegated_method_ptr,                     \
-                             _alternative_method_ptr)                   \
+#define Selective_hook(_consult_or_fw_method,                           \
+                       _delegated_method_type,                          \
+                       _delegated_method_ptr,                           \
+                       _alternative_method_ptr)                         \
   /*_alternative_method_ptr must not be null*/                          \
                                                                         \
   template<typename DUMMY>                                              \
@@ -130,7 +131,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
     }                                                                   \
 };                                                                      \
 
-#define Define_Global_Encapsulation(_consult_or_fw_method)              \
+#define Define_Global_Wrapping(_consult_or_fw_method)                   \
     /* --- global encapsultaion*/                                       \
     /* testing existance of a global ecapsulation method */             \
     template <typename Tested>                                          \
@@ -152,7 +153,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
     }                                                                   \
 
 
-#define Define_Selective_Encapsulation(_consult_or_fw_method)           \
+#define Define_Selective_Hooking(_consult_or_fw_method)                 \
   /* defining default alternative to delegated method invokation */     \
   /* with nullptr method*/                                              \
   template<typename MemberType,                                         \
@@ -197,9 +198,9 @@ struct _consult_or_fw_method##alternative_member_<                      \
         _consult_method##const_only                                     \
         };                                                              \
                                                                         \
-  Define_Global_Encapsulation(_consult_method);                         \
+  Define_Global_Wrapping(_consult_method);                              \
                                                                         \
-  Define_Selective_Encapsulation(_consult_method);                      \
+  Define_Selective_Hooking(_consult_method);                            \
                                                                         \
   /* const and non void return  */                                      \
   template<typename MMType,                                             \
@@ -230,10 +231,10 @@ struct _consult_or_fw_method##alternative_member_<                      \
            typename ...BTs>                                             \
   inline typename std::                                                 \
   enable_if<std::is_same<void,                                          \
-                         typename nicobou::                         \
+                         typename nicobou::                             \
                          method_traits<MMType, fun>::return_type>::value\
             >::type                                                     \
-  _consult_method(BTs ...args) const {                               \
+  _consult_method(BTs ...args) const {                                  \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -245,7 +246,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
           return (this->*alt)(std::forward<BTs>(args)...);              \
         else                                                            \
           ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);         \
-  }                                                                      \
+  }                                                                     \
                                                                         \
   /* non const and non void return  */                                  \
   template<typename MMType,                                             \
@@ -254,17 +255,17 @@ struct _consult_or_fw_method##alternative_member_<                      \
            int flag=_consult_method##_access_flag>                      \
   inline typename std::                                                 \
   enable_if<!std::is_same<void,                                         \
-                          typename nicobou::                        \
+                          typename nicobou::                            \
                           method_traits<MMType, fun>::return_type>::value, \
-            typename nicobou::method_traits<MMType, fun>::return_type \
+            typename nicobou::method_traits<MMType, fun>::return_type   \
             >::type                                                     \
-  _consult_method(BTs ...args) {                                     \
-    static_assert(nicobou::method_traits<MMType, fun>::is_const     \
-                  || (!nicobou::method_traits<MMType, fun>::is_const \
+  _consult_method(BTs ...args) {                                        \
+    static_assert(nicobou::method_traits<MMType, fun>::is_const         \
+                  || (!nicobou::method_traits<MMType, fun>::is_const    \
                       && flag == _consult_method##NonConst_t::          \
                       _consult_method##non_const),                      \
                   "consultation is available for const methods only"    \
-                  " (delegation is disabled)");                          \
+                  " (delegation is disabled)");                         \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _consult_method##internal_encaps();                             \
@@ -285,7 +286,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
                          typename nicobou::                             \
                          method_traits<MMType, fun>::return_type>::value\
             >::type                                                     \
-  _consult_method(BTs ...args) {                                     \
+  _consult_method(BTs ...args) {                                        \
     static_assert(nicobou::method_traits<MMType, fun>::is_const         \
                   || (!nicobou::method_traits<MMType, fun>::is_const    \
                       && flag == _consult_method##NonConst_t::          \
@@ -343,9 +344,9 @@ struct _consult_or_fw_method##alternative_member_<                      \
         _fw_method##const_only                                          \
         };                                                              \
                                                                         \
-  Define_Global_Encapsulation(_fw_method);                              \
+  Define_Global_Wrapping(_fw_method);                                   \
                                                                         \
-  Define_Selective_Encapsulation(_fw_method);                           \
+  Define_Selective_Hooking(_fw_method);                                 \
                                                                         \
   template<typename MMType,                                             \
            MMType fun,                                                  \
@@ -376,7 +377,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
         if(nullptr != alt)                                              \
           return (this->*alt)(std::forward<BTs>(args)...);              \
         return (_member_rawptr)->                                       \
-            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
   }                                                                     \
                                                                         \
   template<typename MMType,                                             \
@@ -396,7 +397,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
                          typename nicobou::                             \
                          method_traits<MMType, fun>::return_type>::value \
             >::type                                                     \
-  _fw_method(BTs ...args) const {                                    \
+  _fw_method(BTs ...args) const {                                       \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -559,7 +560,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
   }                                                                     \
 
 
-#define Forward_consultable_default(...)                   \
+#define Forward_consultable_default(...)                \
   Forward_consultable_full(__VA_ARGS__, const_only)
 
 #define Forward_delegate(...)                           \
@@ -567,7 +568,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
 
 // overloading Forward_consultable selection Make_access
 // and Forawrd_consultable according to number of args
-#define Forward_consultable_get_overload(_1, _2, _3, _4, _5, _6, NAME, ...)  \
+#define Forward_consultable_get_overload(_1, _2, _3, _4, _5, _6, NAME, ...) \
   NAME
 
 #define Forward_consultable(...)                                        \
@@ -597,9 +598,9 @@ struct _consult_or_fw_method##alternative_member_<                      \
         std::decay<_map_member_type>::type::                            \
         _consult_method##Consult_t;                                     \
                                                                         \
-    Define_Global_Encapsulation(_fw_method);                            \
+    Define_Global_Wrapping(_fw_method);                                 \
                                                                         \
-    Define_Selective_Encapsulation(_fw_method);                         \
+    Define_Selective_Hooking(_fw_method);                               \
                                                                         \
     template<typename MMType,                                           \
              MMType fun,                                                \
@@ -616,7 +617,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
       static_assert(nicobou::method_traits<MMType, fun>::is_const,      \
                     "consultation is available for const methods only"); \
       /* finding object */                                              \
-      auto consultable = _accessor_method (key);                         \
+      auto consultable = _accessor_method (key);                        \
       if (!std::get<0>(consultable))                                    \
         return _on_error_construct_ret_method().                        \
             _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \

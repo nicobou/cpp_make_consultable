@@ -41,7 +41,7 @@ class WidgetOwner {
  public:
   Make_consultable(WidgetOwner, Widget, &first_, consult_first);
   
-  private:
+ private:
   Widget first_{};
 };
 

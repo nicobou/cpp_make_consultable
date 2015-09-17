@@ -75,4 +75,5 @@ clean:
            delegate_example-gcc delegate_example-clang \
            vector_example-gcc vector_example-clang \
            selective_encapsulation-gcc selective_encapsulation-clang \
-           forward_from_associative_container-gcc forward_from_associative_container-clang
+           forward_from_associative_container-gcc forward_from_associative_container-clang \
+           forward_example_with_encapsulation-gcc forward_example_with_encapsulation-clang 

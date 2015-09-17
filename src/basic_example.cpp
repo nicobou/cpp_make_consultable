@@ -35,7 +35,7 @@ class Widget {
   void set_name(const string &name) { name_ = name; }
   
  private:
-   string name_{};
+  string name_{};
 };
 
 class WidgetOwner {
@@ -49,10 +49,10 @@ class WidgetOwner {
 };
 
 int main() {
-  WidgetOwner wo;                                    // print:
-  cout << wo.consult_first<Method(&Widget::get_name)>()       // first
-       << wo.consult_second<Method(&Widget::get_name)>()      // second
-       << wo.consult_second<Method(&Widget::hello)>("you")  // hello you
+  WidgetOwner wo;                                          // print:
+  cout << wo.consult_first<Method(&Widget::get_name)>()    // first
+       << wo.consult_second<Method(&Widget::get_name)>()   // second
+       << wo.consult_second<Method(&Widget::hello)>("you") // hello you
        << endl;
   // the following is failling to compile
   // because Widget::set_name is not const
