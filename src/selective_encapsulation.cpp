@@ -47,30 +47,30 @@ class WidgetOwner {
  public:
   Make_consultable(WidgetOwner, Widget, &first_, consult_first);
   Make_consultable(WidgetOwner, Widget, &second_, consult_second);
-  Overload_consultable(consult_second,
-                       decltype(&Widget::hello),
-                       &Widget::hello,
-                       &WidgetOwner::hello_wrapper);
+  Selective_encapsulation(consult_second,
+                          decltype(&Widget::hello),
+                          &Widget::hello,
+                          &WidgetOwner::hello_wrapper);
 
  private:
   Widget first_{"first"};
   Widget second_{"second"};
+  // encapsulating the call to Widget::hello
   string hello_wrapper(const string &str) const {
-    string res("overloaded hello" + str);
+    string res("overloaded -" + second_.hello(str) + "-");
     return res;
   }
   // encapsulation for each call by user (global encapsulation)
   torPrinter encapsulated() const {return torPrinter();}
-  Encapsulate_consultable(consult_second, torPrinter, encapsulated);
+  Global_encapsulation(consult_second, torPrinter, encapsulated);
 };
 
 int main() {
   WidgetOwner wo;                                   // print:
-  cout 
-      << wo.consult_first<Method(&Widget::get_name)>()       // first
-      << wo.consult_second<Method(&Widget::get_name)>()      // second
-      << wo.consult_second<Method(&Widget::hello)>("you")  // hello you
-       << endl;
+  cout << wo.consult_first<Method(&Widget::get_name)>() << endl;    // first
+  cout << wo.consult_second<Method(&Widget::get_name)>() << endl;   // second
+  cout << wo.consult_second<Method(&Widget::hello)>("you") << endl; // hello you
+      
   // the following is failling to compile
   // because Widget::set_name is not const
   //wo.consult_first<Method(&Widget::set_name)>("third");

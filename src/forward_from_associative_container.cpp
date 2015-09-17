@@ -63,7 +63,7 @@ class Box {
       consult_first,
       fwd_first);
   // selective encapsulation of string Widget::get_name(int)
-  Overload_consultable(fwd_first,
+  Selective_encapsulation(fwd_first,
                        Const_Overload_Type(&Widget::get_name, Widget, string, int),
                        &Widget::get_name,
                        &Box::get_name_wrapper);
@@ -93,14 +93,14 @@ class Box {
     ~torPrinter(){ cout << "dtor\n"; }
   };
   torPrinter encapsulated() const {return torPrinter();}
-  Encapsulate_consultable(fwd_first, torPrinter, encapsulated);
+  Global_encapsulation(fwd_first, torPrinter, encapsulated);
 };  // class Box
 
 class BoxOwner{
  public:
   Forward_consultable(BoxOwner, Box, &b_, fwd_first, fwd_last);
   // selective encapsulation of string Widget::get_name(int)
-  Overload_consultable(fwd_last,
+  Selective_encapsulation(fwd_last,
                        Const_Overload_Type(&Widget::get_name, Widget, string, int),
                        &Widget::get_name,
                        &BoxOwner::get_name_wrapper);
@@ -114,7 +114,7 @@ class BoxOwner{
     ~torPrinter(){ cout << "ddtor\n"; }
   };
   torPrinter encapsulated() const {return torPrinter();}
-  Encapsulate_consultable(fwd_last, torPrinter, encapsulated);
+  Global_encapsulation(fwd_last, torPrinter, encapsulated);
 };
 
 int main() {

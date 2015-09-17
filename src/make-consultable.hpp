@@ -30,6 +30,23 @@
 #include <cstddef> // size_t
 #include <tuple>  // method_traits args and std::get
 
+// selecting method and Overload for template parameter of consultation method
+#define Method(_method_ptr)                     \
+  decltype(_method_ptr), _method_ptr            
+
+#define Overload(_PTR, _C, _R, ...)                             \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR)), _PTR
+
+#define Const_Overload(_PTR, _C, _R, ...)                               \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR)), _PTR
+
+#define Const_Overload_Type(_PTR, _C, _R, ...)                  \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR))
+
+#define Overload_Type(_PTR, _C, _R, ...)                \
+  decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR))
+
+
 namespace nicobou {
 
 // method_traits for method types introspection:
@@ -80,24 +97,8 @@ struct method_convert<R(C::*)(Args...), T>{
 
 }  // namespace nicobou
 
-// selecting method and Overload for template parameter of consultation method
-#define Method(_method_ptr)                     \
-  decltype(_method_ptr), _method_ptr            
-
-#define Overload(_PTR, _C, _R, ...)                             \
-  decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR)), _PTR
-
-#define Const_Overload(_PTR, _C, _R, ...)                               \
-  decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR)), _PTR
-
-#define Const_Overload_Type(_PTR, _C, _R, ...)                  \
-  decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR))
-
-#define Overload_Type(_PTR, _C, _R, ...)                \
-  decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR))
-
 // encapsulation:
-#define Encapsulate_consultable(_consult_method,                        \
+#define Global_encapsulation(_consult_method,                        \
                                 _encapsulate_return_type,               \
                                 _method_encapsulated)                   \
   static void _consult_method##enable_encaps(){}                        \
@@ -108,7 +109,7 @@ struct method_convert<R(C::*)(Args...), T>{
     return _method_encapsulated();                                      \
   }                                                                     \
 
-#define Overload_consultable(_consult_or_fw_method,                     \
+#define Selective_encapsulation(_consult_or_fw_method,                     \
                              _delegated_method_type,                    \
                              _delegated_method_ptr,                     \
                              _alternative_method_ptr)                   \
