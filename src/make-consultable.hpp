@@ -30,29 +30,51 @@
 #include <tuple>  // method_traits args
 
 namespace nicobou {
+
+// method_traits for method types introspection:
 template<typename F, F f>
 struct method_traits;
-
-// const member function pointer
-template<typename C, typename R, typename ...Args, R (C::*fn_ptr)(Args... ) const >
-struct method_traits<R(C::*)(Args...) const, fn_ptr>
-{
+// const
+template<typename C,
+         typename R,
+         typename ...Args,
+         R (C::*fn_ptr)(Args... ) const >
+struct method_traits<R(C::*)(Args...) const, fn_ptr>{
   using return_type = R;
   using method_t = R(C::*)(Args...) const;
-  using fun_t = R(*)(Args...);
   static constexpr method_t ptr = fn_ptr;
   static constexpr bool is_const = true;
 };
-
-// member function pointer
-template<typename C, typename R, typename ...Args, R (C::*fn_ptr)(Args... ) >
-struct method_traits<R(C::*)(Args...), fn_ptr>
-{
+// non const
+template<typename C,
+         typename R,
+         typename ...Args,
+         R (C::*fn_ptr)(Args... )>
+struct method_traits<R(C::*)(Args...), fn_ptr>{
   using return_type = R;
   using method_t = R(C::*)(Args...);
-  using fun_t = R(*)(Args...);
   static constexpr method_t ptr = fn_ptr;
   static constexpr bool is_const = false;
+};
+
+// copy a method signature from a class and make the equivalenent signature but as a member of an other type
+template<typename M, typename T>
+struct method_convert;
+// const
+template<typename C,
+         typename R,
+         typename ...Args,
+         typename T>
+struct method_convert<R(C::*)(Args...) const, T>{
+  using type = R(T::*)(Args...) const;
+};
+// non const
+template<typename C,
+         typename R,
+         typename ...Args,
+         typename T>
+struct method_convert<R(C::*)(Args...), T>{
+  using type = R(T::*)(Args...);
 };
 
 }  // namespace nicobou
@@ -80,24 +102,21 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
     return _method_encapsulated();                                      \
   }                                                                     \
 
-
+// FIXME rename _consult_method to _consult_or_fw_method
 #define Overload_consultable(_consult_method,                           \
                              _delegated_method_ptr,                     \
                              _alternative_method_ptr)                   \
   /*FIXME check signatures compatibility*/                              \
-  /*FIXME return a fun_t like type in order to enable it when forwarding*/ \
   template<typename DUMMY>                                              \
   struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
                                               _delegated_method_ptr,    \
                                               DUMMY> {                  \
-    /*FIXME use return type deduction and argument types deduction: */  \
-    static decltype(_delegated_method_ptr) get() {                      \
-    /*reinterpret cast is used for let get method user the alternative*/ \
-    /* method is from expected class, but what we want actually, */     \
-    /* is a function with same return type and arguments*/              \
-    return reinterpret_cast<decltype(_delegated_method_ptr)>(           \
-        _alternative_method_ptr);                                       \
-  }                                                                     \
+    static typename nicobou::                                           \
+    method_convert<decltype(_delegated_method_ptr),                     \
+                   _consult_method##self_type>::type                    \
+    get() {                                                             \
+      return _alternative_method_ptr;                                   \
+    }                                                                   \
 };                                                                      \
 
 
@@ -110,6 +129,8 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
   static_assert(std::is_class<_member_type>::value,                     \
                 "Make_consultable and Make Delegate first "             \
                 "argument must be a class");                            \
+                                                                        \
+  using _consult_method##self_type = _self_type;                        \
                                                                         \
   /*disabling key type for later forward*/                              \
   using _consult_method##MapKey_t = decltype(nullptr);                  \
@@ -149,14 +170,19 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
            MemberType ptr,                                              \
            typename DUMMY = void>                                       \
   struct _consult_method##alternative_member_ {                         \
-    static MemberType get(){                                            \
+    using mtraits = typename nicobou::method_traits<MemberType, ptr>;   \
+    static typename nicobou::                                           \
+    method_convert<MemberType, _consult_method##self_type>::type        \
+    get() {                                                             \
       return nullptr;                                                   \
     };                                                                  \
   };                                                                    \
   /*getting alternative invocation */                                   \
-  template<typename MemberType, MemberType t>                           \
-  static MemberType _consult_method##get_alternative() {                \
-    return _consult_method##alternative_member_<MemberType, t>::get();  \
+  template<typename MemberType, MemberType ptr>                         \
+  static typename nicobou::                                             \
+  method_convert<MemberType, _consult_method##self_type>::type          \
+  _consult_method##get_alternative() {                                  \
+    return _consult_method##alternative_member_<MemberType, ptr>::get(); \
   }                                                                     \
                                                                         \
   /* const and non void return  */                                      \
@@ -203,7 +229,7 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
           ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);         \
         else                                                            \
           ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);         \
-  }                                                                     \
+  }                                                                      \
                                                                         \
   /* non const and non void return  */                                  \
   template<typename MMType,                                             \
@@ -229,7 +255,7 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
         auto alt =                                                      \
             _consult_method##get_alternative<decltype(fun), fun>();     \
         if(nullptr != alt)                                              \
-          return ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);  \
+          return (this->*alt)(std::forward<BTs>(args)...);              \
         return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);    \
   }                                                                     \
                                                                         \
@@ -256,7 +282,7 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
     auto alt =                                                          \
         _consult_method##get_alternative<decltype(fun), fun>();         \
         if(nullptr != alt)                                              \
-          ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);         \
+          (this->*alt)(std::forward<BTs>(args)...);                     \
         else                                                            \
           ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);         \
   }                                                                     \
@@ -325,7 +351,7 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
            MemberType ptr,                                              \
            typename DUMMY = void>                                       \
   struct _fw_method##alternative_member_ {                              \
-    static typename nicobou::method_traits<MemberType,ptr>::fun_t       \
+    static typename nicobou::method_traits<MemberType,ptr>::method_t    \
     get(){                                                              \
       return nullptr;                                                   \
     };                                                                  \
@@ -333,7 +359,7 @@ struct method_traits<R(C::*)(Args...), fn_ptr>
                                                                         \
   /*getting alternative invocation */                                   \
   template<typename MemberType, MemberType t>                           \
-  static typename nicobou::method_traits<MemberType, t>::fun_t          \
+  static typename nicobou::method_traits<MemberType, t>::method_t       \
   _fw_method##get_alternative() {                                       \
     return _fw_method##alternative_member_<MemberType, t>::get();       \
   }                                                                     \
