@@ -52,12 +52,12 @@ class WidgetOwner {
  private:
   Widget first_{"first"};
   Widget second_{"second"};
-  torPrinter encapsulated() const {return torPrinter();}
   string hello_wrapper(const string &str) const {
     string res("overloaded hello" + str);
     return res;
   }
-  // return type cannot be void
+  // encapsulation for each call by user (global encapsulation)
+  torPrinter encapsulated() const {return torPrinter();}
   Encapsulate_consultable(consult_second, torPrinter, encapsulated);
 };
 

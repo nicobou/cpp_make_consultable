@@ -48,10 +48,17 @@ class Box {
  public:
   Forward_consultable(Box, WidgetOwner, &wo_, consult_first, fwd_first);
   Forward_consultable(Box, WidgetOwner, &wo_, consult_second, fwd_second);
-  //Overload_consultable(fw_second, &Widget::get_name, &Box::get_name_wrapper);
+  Overload_consultable(fwd_second, &Widget::get_name, &Box::get_name_wrapper);
  private:
   WidgetOwner wo_;
   string get_name_wrapper() const {return "box";}
+  // global encapsulation
+  struct torPrinter{
+    torPrinter(){ cout << "ctor "; }
+    ~torPrinter(){ cout << "dtor\n"; }
+  };
+  torPrinter encapsulated() const {return torPrinter();}
+  Encapsulate_consultable(fwd_first, torPrinter, encapsulated);
 };
 
 int main() {
