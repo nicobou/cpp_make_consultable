@@ -2,6 +2,7 @@ all: \
     basic_example \
     overload_example \
     forward_example \
+    forward_example_with_encapsulation \
     consultable_setters_example \
     delegate_example \
     vector_example \
@@ -20,6 +21,10 @@ overload_example: overload_example.cpp
 forward_example: forward_example.cpp
 	g++ -std=c++11 -o forward_example-gcc -Wall -Werror -Wfatal-errors forward_example.cpp 
 	clang++ -std=c++11 -o forward_example-clang -Wall -Werror -Wfatal-errors forward_example.cpp 
+
+forward_example_with_encapsulation: forward_example_with_encapsulation.cpp
+	g++ -std=c++11 -o forward_example_with_encapsulation-gcc -Wall -Werror -Wfatal-errors forward_example_with_encapsulation.cpp 
+	clang++ -std=c++11 -o forward_example_with_encapsulation-clang -Wall -Werror -Wfatal-errors forward_example_with_encapsulation.cpp 
 
 consultable_setters_example: consultable_setters_example.cpp
 	g++ -std=c++11 -o consultable_setters_example-gcc -Wall -Werror -Wfatal-errors consultable_setters_example.cpp 
@@ -44,6 +49,8 @@ test:
 	./overload_example-clang
 	./forward_example-gcc
 	./forward_example-clang
+	./forward_example_with_encapsulation-gcc
+	./forward_example_with_encapsulation-clang
 	./consultable_setters_example-gcc
 	./consultable_setters_example-clang
 	./delegate_example-gcc

@@ -102,18 +102,19 @@ struct method_convert<R(C::*)(Args...), T>{
     return _method_encapsulated();                                      \
   }                                                                     \
 
-// FIXME rename _consult_method to _consult_or_fw_method
-#define Overload_consultable(_consult_method,                           \
+#define Overload_consultable(_consult_or_fw_method,                     \
                              _delegated_method_ptr,                     \
                              _alternative_method_ptr)                   \
-  /*FIXME check signatures compatibility*/                              \
-  template<typename DUMMY>                                              \
-  struct _consult_method##alternative_member_<decltype(_delegated_method_ptr), \
-                                              _delegated_method_ptr,    \
-                                              DUMMY> {                  \
-    static typename nicobou::                                           \
+template<typename DUMMY>                                                \
+struct _consult_or_fw_method##alternative_member_<                      \
+     decltype(_delegated_method_ptr),                                   \
+     _delegated_method_ptr,                                             \
+     DUMMY> {                                                           \
+  /* cannot static assert here because _alternative_method_ptr */       \
+  /* is possibly not yet declared */                                    \
+  static typename nicobou::                                             \
     method_convert<decltype(_delegated_method_ptr),                     \
-                   _consult_method##self_type>::type                    \
+                   _consult_or_fw_method##self_type>::type              \
     get() {                                                             \
       return _alternative_method_ptr;                                   \
     }                                                                   \
@@ -170,7 +171,6 @@ struct method_convert<R(C::*)(Args...), T>{
            MemberType ptr,                                              \
            typename DUMMY = void>                                       \
   struct _consult_method##alternative_member_ {                         \
-    using mtraits = typename nicobou::method_traits<MemberType, ptr>;   \
     static typename nicobou::                                           \
     method_convert<MemberType, _consult_method##self_type>::type        \
     get() {                                                             \
@@ -204,7 +204,7 @@ struct method_convert<R(C::*)(Args...), T>{
         auto alt =                                                      \
             _consult_method##get_alternative<decltype(fun), fun>();     \
         if(nullptr != alt)                                              \
-          return ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);  \
+          return (this->*alt)(std::forward<BTs>(args)...);              \
         return ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);    \
   }                                                                     \
                                                                         \
@@ -226,7 +226,7 @@ struct method_convert<R(C::*)(Args...), T>{
     auto alt =                                                          \
         _consult_method##get_alternative<decltype(fun), fun>();         \
         if(nullptr != alt)                                              \
-          ((_member_rawptr)->*alt)(std::forward<BTs>(args)...);         \
+          return (this->*alt)(std::forward<BTs>(args)...);              \
         else                                                            \
           ((_member_rawptr)->*fun)(std::forward<BTs>(args)...);         \
   }                                                                      \
@@ -310,6 +310,8 @@ struct method_convert<R(C::*)(Args...), T>{
                                  _consult_method,                       \
                                  _fw_method,                            \
                                  _access_flag)                          \
+  using _fw_method##self_type = _self_type;                             \
+                                                                        \
   /*forwarding key type*/                                               \
   using _fw_method##MapKey_t =                                          \
       typename std::decay<_member_type>::type::                         \
@@ -346,22 +348,22 @@ struct method_convert<R(C::*)(Args...), T>{
   }                                                                     \
                                                                         \
   /* --- selective encapsulation*/                                      \
-  /* no default alternative to delegated method invokation: */          \
   template<typename MemberType,                                         \
            MemberType ptr,                                              \
            typename DUMMY = void>                                       \
   struct _fw_method##alternative_member_ {                              \
-    static typename nicobou::method_traits<MemberType,ptr>::method_t    \
-    get(){                                                              \
+    static typename nicobou::                                           \
+    method_convert<MemberType, _fw_method##self_type>::type             \
+    get() {                                                             \
       return nullptr;                                                   \
     };                                                                  \
   };                                                                    \
-                                                                        \
   /*getting alternative invocation */                                   \
-  template<typename MemberType, MemberType t>                           \
-  static typename nicobou::method_traits<MemberType, t>::method_t       \
+  template<typename MemberType, MemberType ptr>                         \
+  static typename nicobou::                                             \
+  method_convert<MemberType, _fw_method##self_type>::type               \
   _fw_method##get_alternative() {                                       \
-    return _fw_method##alternative_member_<MemberType, t>::get();       \
+    return _fw_method##alternative_member_<MemberType, ptr>::get();     \
   }                                                                     \
                                                                         \
   template<typename MMType,                                             \
@@ -379,7 +381,10 @@ struct method_convert<R(C::*)(Args...), T>{
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _fw_method##internal_encaps();                                  \
-        /*FIXME FIXME get alt here*/                                    \
+        auto alt =                                                      \
+            _fw_method##get_alternative<decltype(fun), fun>();          \
+        if(nullptr != alt)                                              \
+          return (this->*alt)(std::forward<BTs>(args)...);              \
         return (_member_rawptr)->                                       \
             _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
   }                                                                     \
@@ -398,9 +403,13 @@ struct method_convert<R(C::*)(Args...), T>{
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _fw_method##internal_encaps();                                  \
-        /*FIXME FIXME get alt here*/                                    \
-        (_member_rawptr)->                                              \
-            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
+        auto alt =                                                      \
+            _fw_method##get_alternative<decltype(fun), fun>();          \
+        if(nullptr != alt)                                              \
+          (this->*alt)(std::forward<BTs>(args)...);                     \
+        else                                                            \
+          (_member_rawptr)->                                            \
+              _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
   }                                                                     \
                                                                         \
                                                                         \
@@ -414,7 +423,7 @@ struct method_convert<R(C::*)(Args...), T>{
                           method_traits<MMType, fun>::return_type>::value, \
             typename nicobou::method_traits<MMType, fun>::return_type   \
             >::type                                                     \
-  _fw_method(BTs ...args) {                                          \
+  _fw_method(BTs ...args) {                                             \
     static_assert(nicobou::method_traits<MMType, fun>::is_const         \
                   || (!nicobou::method_traits<MMType, fun>::is_const    \
                       && flag == _fw_method##NonConst_t::               \
@@ -423,10 +432,13 @@ struct method_convert<R(C::*)(Args...), T>{
                   "methods only");                                      \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
-        _fw_method##internal_encaps();                             \
-        /* FIXME do alt*/                                               \
-        return (_member_rawptr)->                                       \
-            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
+        _fw_method##internal_encaps();                                  \
+    auto alt =                                                          \
+        _fw_method##get_alternative<decltype(fun), fun>();              \
+    if(nullptr != alt)                                                  \
+      return (this->*alt)(std::forward<BTs>(args)...);                  \
+    return (_member_rawptr)->                                           \
+        _consult_method<MMType, fun>(std::forward<BTs>(args)...);       \
   }                                                                     \
                                                                         \
                                                                         \
@@ -449,9 +461,13 @@ struct method_convert<R(C::*)(Args...), T>{
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _fw_method##internal_encaps();                                  \
-        /* FIXME do alt*/                                               \
-        (_member_rawptr)->                                              \
-            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
+    auto alt =                                                          \
+        _fw_method##get_alternative<decltype(fun), fun>();              \
+    if(nullptr != alt)                                                  \
+      (this->*alt)(std::forward<BTs>(args)...);                         \
+    else                                                                \
+      (_member_rawptr)->                                                \
+          _consult_method<MMType, fun>(std::forward<BTs>(args)...);     \
   }                                                                     \
                                                                         \
                                                                         \
