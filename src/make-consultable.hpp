@@ -619,8 +619,10 @@ struct _consult_or_fw_method##alternative_member_<                      \
       /* finding object */                                              \
       auto consultable = _accessor_method (key);                        \
       if (!std::get<0>(consultable))                                    \
-        return _on_error_construct_ret_method(key).                        \
-            _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
+        return                                                          \
+            _on_error_construct_ret_method<typename nicobou::           \
+                                           method_traits<MMType, fun>:: \
+                                           return_type>(key);           \
       /*we have the object, continue*/                                  \
       /* __attribute__((unused)) tells compiler encap is not used: */   \
       auto encap __attribute__((unused)) =                              \
@@ -649,9 +651,11 @@ struct _consult_or_fw_method##alternative_member_<                      \
       /* finding object */                                              \
     auto consultable = _accessor_method(key);                           \
     if (!std::get<0>(consultable))                                      \
-      return _on_error_construct_ret_method(key).                       \
-            _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
-      /* __attribute__((unused)) tells compiler encap is not used*/     \
+      return                                                            \
+          _on_error_construct_ret_method<typename nicobou::             \
+                                         method_traits<MMType, fun>::   \
+                                         return_type>(key);             \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _fw_method##internal_encaps();                                  \
         auto alt =                                                      \

@@ -74,16 +74,24 @@ class Box {
   
   // will be used by Forward_consultable_from_associative_container
   std::pair<bool, WidgetOwner *> find_wos_element(int key) const{
+    std::cout << __LINE__ << std::endl;
     auto it = wos_.find(key);
+    std::cout << __LINE__ << std::endl;
     if (wos_.end() == it){
+    std::cout << __LINE__ << std::endl;
       return std::make_pair(false, nullptr);
     }
+    std::cout << __LINE__ << std::endl;
     return std::make_pair(true, it->second.get());
   };
-  // construct result to pass when element has not been not found:
-  WidgetOwner construct_error_return(int /*key*/) const{
+  // construct result to pass when element has not been not found,
+  // the return type expected is given as template parameter:
+  template<typename ReturnType>
+  ReturnType construct_error_return(int /*key*/) const{
+    std::cout << __LINE__ << std::endl;
     assert(false); // bug
-    return WidgetOwner();
+    std::cout << __LINE__ << std::endl;
+    return ReturnType();
   }
 
   string get_name_wrapper(int a) const {return std::to_string(a) + " from Box";}
@@ -130,14 +138,18 @@ int main() {
   }
 
   {  // testing the use of forwaring after forwarding from container
-    BoxOwner bo{};
+     BoxOwner bo{};
     // prints "First"
     cout  << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
           << endl;
     // prints "34 from box" 
     cout << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string, int)>(1234, 34)   
          << endl; 
+    // 666 is not a valid key, so the following invocation
+    // will call "construct_error_return<string>(int)" (which is calling assert):
+    // cout << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string)>(666)   
+    //      << endl; 
   }
-
+ 
   return 0;
 }
