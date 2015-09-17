@@ -24,10 +24,11 @@
 #ifndef __MAKE_CONSULTABLE_H__
 #define __MAKE_CONSULTABLE_H__
 
+#include <iostream>
 #include <functional>
 #include <type_traits>
 #include <cstddef> // size_t
-#include <tuple>  // method_traits args
+#include <tuple>  // method_traits args and std::get
 
 namespace nicobou {
 
@@ -431,7 +432,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
                          typename nicobou::                             \
                          method_traits<MMType, fun>::return_type>::value \
             >::type                                                     \
-  _fw_method(BTs ...args) {                                          \
+  _fw_method(BTs ...args) {                                             \
     static_assert(nicobou::method_traits<MMType, fun>::is_const         \
                   || (!nicobou::method_traits<MMType, fun>::is_const    \
                       && flag == _fw_method##NonConst_t::               \
@@ -519,53 +520,58 @@ struct _consult_or_fw_method##alternative_member_<                      \
 
 // returns default constructed R if key not found
 // assuming the map is storing shared or unique pointers
-#define Forward_consultable_from_map(_map_key_type,                     \
-                                     _map_member_type,                  \
-                                     _map_member,                       \
-                                     _consult_method,			\
-                                     _fw_method)			\
+#define Forward_consultable_from_associative_container(                 \
+    _self_type,                                                         \
+    _map_member_type,                                                   \
+    _accessor_method,                                                   \
+    _map_key_type,                                                      \
+    _on_error_construct_ret_method,                                     \
+    _consult_method,                                                    \
+    _fw_method)                                                         \
+    using _fw_method##self_type = _self_type;                           \
                                                                         \
-  /*saving key type for later forward*/                                 \
-  using _fw_method##MapKey_t =                                          \
-      const std::decay<_map_key_type>::type &;                          \
+    /*saving key type for later forward*/                               \
+    using _fw_method##MapKey_t =                                        \
+        const std::decay<_map_key_type>::type &;                        \
                                                                         \
-  /*forwarding consultable type for other forwarder(s)*/                \
-  using _fw_method##Consult_t = typename                                \
-      std::decay<_map_member_type>::type::                              \
-      _consult_method##Consult_t;                                       \
+    /*forwarding consultable type for other forwarder(s)*/              \
+    using _fw_method##Consult_t = typename                              \
+        std::decay<_map_member_type>::type::                            \
+        _consult_method##Consult_t;                                     \
                                                                         \
-  Define_Global_Encapsulation(_fw_method);                              \
+    Define_Global_Encapsulation(_fw_method);                            \
                                                                         \
-  Define_Selective_Encapsulation(_fw_method);                           \
+    Define_Selective_Encapsulation(_fw_method);                         \
                                                                         \
-  template<typename MMType,                                             \
-           MMType fun,                                                  \
+    template<typename MMType,                                           \
+             MMType fun,                                                \
            typename ...BTs>                                             \
-  inline typename std::                                                 \
-  enable_if<!std::is_same<void,                                         \
-           typename nicobou::                                           \
-                          method_traits<MMType, fun>::return_type>::value, \
-            typename nicobou::method_traits<MMType, fun>::return_type   \
-            >::type                                                     \
-  _fw_method(                                                           \
-      const typename std::decay<_map_key_type>::type &key,              \
-      BTs ...args) const {                                              \
-    auto it = _map_member.find(key);					\
-    if (_map_member.end() == it){					\
-      static typename std::decay<R>::type r; /*if R is a reference*/	\
-      return r;                                                         \
-    }									\
-    static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
-                  "consultation is available for const methods only");  \
-    /* __attribute__((unused)) tells compiler encap is not used*/       \
-    auto encap __attribute__((unused)) =                                \
+    inline typename std::                                               \
+    enable_if<!std::is_same<void,                                       \
+                            typename nicobou::                          \
+                            method_traits<MMType, fun>::return_type>::value, \
+              typename nicobou::method_traits<MMType, fun>::return_type \
+              >::type                                                   \
+    _fw_method(                                                         \
+        const _map_key_type &key,                                       \
+        BTs ...args) const {                                            \
+      static_assert(nicobou::method_traits<MMType, fun>::is_const,      \
+                    "consultation is available for const methods only"); \
+      /* finding object */                                              \
+      auto consultable = _accessor_method (key);                         \
+      if (!std::get<0>(consultable))                                    \
+        return _on_error_construct_ret_method().                        \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
+      /*we have the object, continue*/                                  \
+      /* __attribute__((unused)) tells compiler encap is not used: */   \
+      auto encap __attribute__((unused)) =                              \
         _fw_method##internal_encaps();                                  \
         auto alt =                                                      \
             _fw_method##get_alternative<decltype(fun), fun>();          \
         if(nullptr != alt)                                              \
           return (this->*alt)(std::forward<BTs>(args)...);              \
-        return it->second->                                             \
-            _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
+        return std::get<1>(consultable)->                               \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
   }									\
                                                                         \
   template<typename MMType,                                             \
@@ -579,14 +585,14 @@ struct _consult_or_fw_method##alternative_member_<                      \
   _fw_method(                                                           \
       const typename std::decay<_map_key_type>::type &key,              \
       BTs ...args) const {                                              \
-    auto it = _map_member.find(key);					\
-    if (_map_member.end() == it){					\
-      static typename std::decay<R>::type r; /*if R is a reference*/	\
-      return r;                                                         \
-    }									\
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
-    /* __attribute__((unused)) tells compiler encap is not used*/       \
+      /* finding object */                                              \
+    auto consultable = _accessor_method(key);                           \
+    if (!std::get<0>(consultable))                                      \
+        return _on_error_construct_ret_method().                        \
+            _consult_method<MMType, fun>(std::forward<BTs>(args)...);   \
+      /* __attribute__((unused)) tells compiler encap is not used*/     \
     auto encap __attribute__((unused)) =                                \
         _fw_method##internal_encaps();                                  \
         auto alt =                                                      \
@@ -594,44 +600,9 @@ struct _consult_or_fw_method##alternative_member_<                      \
         if(nullptr != alt)                                              \
           (this->*alt)(std::forward<BTs>(args)...);                     \
         else                                                            \
-          it->second->                                                  \
+          std::get<1>(consultable)->                                    \
               _consult_method<MMType, fun>(std::forward<BTs>(args)...); \
   }									\
                                                                         \
-  /* disable invokation of non const*/                                  \
-  template<typename MMType,                                             \
-           MMType fun,                                                  \
-           typename ...BTs>                                             \
-  inline typename std::                                                 \
-  enable_if<!std::is_same<void,                                         \
-           typename nicobou::                                           \
-                          method_traits<MMType, fun>::return_type>::value, \
-            typename nicobou::method_traits<MMType, fun>::return_type   \
-            >::type                                                     \
-  _fw_method(                                                           \
-      const typename std::decay<_map_key_type>::type &key,              \
-      BTs ...args) {                                                    \
-    static_assert(true,                                                 \
-                  "consultation is available for const methods only");  \
-    static typename std::decay<R>::type r; /*if R is a reference*/	\
-    return r;                                                           \
-  }									\
-                                                                        \
-  template<typename MMType,                                             \
-           MMType fun,                                                  \
-           typename ...BTs>                                             \
-  inline typename std::                                                 \
-  enable_if<std::is_same<void,                                          \
-                         typename nicobou::                             \
-                         method_traits<MMType, fun>::return_type>::value \
-            >::type                                                     \
-  _fw_method(                                                           \
-      const typename std::decay<_map_key_type>::type &key,              \
-      BTs ...args) {                                                    \
-    static_assert(true,                                                 \
-                  "consultation is available for const methods only");  \
-    static typename std::decay<R>::type r; /*if R is a reference*/	\
-    return r;                                                           \
-  }									\
 
 #endif

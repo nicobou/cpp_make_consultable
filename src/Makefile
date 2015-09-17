@@ -3,6 +3,7 @@ all: \
     overload_example \
     forward_example \
     forward_example_with_encapsulation \
+    forward_from_associative_container \
     consultable_setters_example \
     delegate_example \
     vector_example \
@@ -25,6 +26,10 @@ forward_example: forward_example.cpp
 forward_example_with_encapsulation: forward_example_with_encapsulation.cpp
 	g++ -std=c++11 -o forward_example_with_encapsulation-gcc -Wall -Werror -Wfatal-errors forward_example_with_encapsulation.cpp 
 	clang++ -std=c++11 -o forward_example_with_encapsulation-clang -Wall -Werror -Wfatal-errors forward_example_with_encapsulation.cpp 
+
+forward_from_associative_container: forward_from_associative_container.cpp
+	g++ -std=c++11 -o forward_from_associative_container-gcc -Wall -Werror -Wfatal-errors forward_from_associative_container.cpp 
+	clang++ -std=c++11 -o forward_from_associative_container-clang -Wall -Werror -Wfatal-errors forward_from_associative_container.cpp 
 
 consultable_setters_example: consultable_setters_example.cpp
 	g++ -std=c++11 -o consultable_setters_example-gcc -Wall -Werror -Wfatal-errors consultable_setters_example.cpp 
@@ -51,6 +56,8 @@ test:
 	./forward_example-clang
 	./forward_example_with_encapsulation-gcc
 	./forward_example_with_encapsulation-clang
+	./forward_from_associative_container-gcc
+	./forward_from_associative_container-clang
 	./consultable_setters_example-gcc
 	./consultable_setters_example-clang
 	./delegate_example-gcc
@@ -67,4 +74,5 @@ clean:
            consultable_setters_example-gcc consultable_setters_example-clang \
            delegate_example-gcc delegate_example-clang \
            vector_example-gcc vector_example-clang \
-           selective_encapsulation-gcc selective_encapsulation-clang		
+           selective_encapsulation-gcc selective_encapsulation-clang \
+           forward_from_associative_container-gcc forward_from_associative_container-clang
