@@ -111,9 +111,9 @@ struct method_convert<R(C::*)(Args...), T>{
                              _delegated_method_type,                    \
                              _delegated_method_ptr,                     \
                              _alternative_method_ptr)                   \
-  static_assert(nullptr != _alternative_method_ptr,                     \
-                "bypassing with a nullptr method is not possible");     \
-template<typename DUMMY>                                                \
+  /*_alternative_method_ptr must not be null*/                          \
+                                                                        \
+  template<typename DUMMY>                                              \
 struct _consult_or_fw_method##alternative_member_<                      \
      _delegated_method_type,                                            \
      _delegated_method_ptr,                                             \
