@@ -132,7 +132,6 @@ struct _consult_or_fw_method##alternative_member_<                      \
 #define Define_Global_Encapsulation(_consult_or_fw_method)              \
     /* --- global encapsultaion*/                                       \
     /* testing existance of a global ecapsulation method */             \
-    /* FIXME use modern version of this */                              \
     template <typename Tested>                                          \
     class _consult_or_fw_method##_has_encaps_method {                   \
       template <typename C> static char test(                           \
@@ -349,14 +348,23 @@ struct _consult_or_fw_method##alternative_member_<                      \
                                                                         \
   template<typename MMType,                                             \
            MMType fun,                                                  \
-           typename ...BTs>                                             \
+           typename ...BTs,                                             \
+           /* enable_if work is depends from a template parameter, */   \
+           /* using sizeof...(BTs) for that*/                           \
+           typename std::						\
+	   enable_if<(sizeof...(BTs),					\
+		      /* if _fw_method##MapKey_t is the same */		\
+		      /* type as nullptr then this forward does */	\
+		      /* not require map key forwarding*/		\
+		      std::is_same<decltype(nullptr),			\
+		      _fw_method##MapKey_t >::value)>::type* = nullptr> \
   inline typename std::                                                 \
   enable_if<!std::is_same<void,                                         \
                           typename nicobou::                            \
                           method_traits<MMType, fun>::return_type>::value, \
             typename nicobou::method_traits<MMType, fun>::return_type   \
             >::type                                                     \
-  _fw_method(BTs ...args) const {                                    \
+  _fw_method(BTs ...args) const {                                       \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -372,11 +380,20 @@ struct _consult_or_fw_method##alternative_member_<                      \
                                                                         \
   template<typename MMType,                                             \
            MMType fun,                                                  \
-           typename ...BTs>                                             \
+           typename ...BTs,                                             \
+           /* enable_if work is depends from a template parameter, */   \
+           /* using sizeof...(BTs) for that*/                           \
+           typename std::						\
+	   enable_if<(sizeof...(BTs),					\
+		      /* if _fw_method##MapKey_t is the same */		\
+		      /* type as nullptr then this forward does */	\
+		      /* not require map key forwarding*/		\
+		      std::is_same<decltype(nullptr),			\
+		      _fw_method##MapKey_t >::value)>::type* = nullptr> \
   inline typename std::                                                 \
   enable_if<std::is_same<void,                                          \
                          typename nicobou::                             \
-                         method_traits<MMType, fun>::return_type>::value\
+                         method_traits<MMType, fun>::return_type>::value \
             >::type                                                     \
   _fw_method(BTs ...args) const {                                    \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
@@ -397,6 +414,15 @@ struct _consult_or_fw_method##alternative_member_<                      \
   template<typename MMType,                                             \
            MMType fun,                                                  \
            typename ...BTs,                                             \
+           /* enable_if work is depends from a template parameter, */   \
+           /* using sizeof...(BTs) for that*/                           \
+           typename std::						\
+	   enable_if<(sizeof...(BTs),					\
+		      /* if _fw_method##MapKey_t is the same */		\
+		      /* type as nullptr then this forward does */	\
+		      /* not require map key forwarding*/		\
+		      std::is_same<decltype(nullptr),			\
+		      _fw_method##MapKey_t >::value)>::type* = nullptr, \
            int flag=_fw_method##_access_flag>                           \
   inline typename std::                                                 \
   enable_if<!std::is_same<void,                                         \
@@ -426,7 +452,16 @@ struct _consult_or_fw_method##alternative_member_<                      \
   template<typename MMType,                                             \
            MMType fun,                                                  \
            typename ...BTs,                                             \
-           int flag=_fw_method##_access_flag>                           \
+           int flag=_fw_method##_access_flag,                           \
+           /* enable_if work is depends from a template parameter, */   \
+           /* using sizeof...(BTs) for that*/                           \
+           typename std::						\
+	   enable_if<(sizeof...(BTs),					\
+		      /* if _fw_method##MapKey_t is the same */		\
+		      /* type as nullptr then this forward does */	\
+		      /* not require map key forwarding*/		\
+		      std::is_same<decltype(nullptr),			\
+		      _fw_method##MapKey_t >::value)>::type* = nullptr> \
   inline typename std::                                                 \
   enable_if<std::is_same<void,                                          \
                          typename nicobou::                             \
@@ -453,53 +488,75 @@ struct _consult_or_fw_method##alternative_member_<                      \
                                                                         \
                                                                         \
   /*forwarding consult from map if the map key type is defined*/        \
-  /* FIXME convert the following with new consulting */                 \
-  template<typename R,                                                  \
-           typename ...ATs,                                             \
+  template<typename MMType,                                             \
+           MMType fun,                                                  \
            typename ...BTs,                                             \
            /* enable_if work is depends from a template parameter, */   \
-           /* using sizeof...(ATs) for that*/                           \
+           /* using sizeof...(BTs) for that*/                           \
            typename std::						\
-	   enable_if<(sizeof...(ATs),					\
+	   enable_if<(sizeof...(BTs),					\
 		      /* if _fw_method##MapKey_t is the same */		\
 		      /* type as nullptr then this forward does */	\
 		      /* not require map key forwarding*/		\
 		      !std::is_same<decltype(nullptr),			\
 		      _fw_method##MapKey_t >::value)>::type* = nullptr>	\
-  inline R _fw_method(                                                  \
-      _fw_method##MapKey_t key,                                         \
-      /*typename std::enable_if<!std::is_class<>::value, T>::type,*/    \
-      R( _fw_method##Consult_t ::*function)(ATs...) const,              \
-      BTs ...args) const {                                              \
-    return (_member_rawptr)->                                           \
-        _consult_method<R, ATs...>(                                     \
-            std::forward< _fw_method##MapKey_t >(key),                  \
-            std::forward<R( _fw_method##Consult_t ::*)(ATs...) const>(  \
-                function),                                              \
-            std::forward<BTs>(args)...);                                \
+  inline typename std::                                                 \
+  enable_if<!std::is_same<void,                                         \
+                          typename nicobou::                            \
+                          method_traits<MMType, fun>::return_type>::value, \
+            typename nicobou::method_traits<MMType, fun>::return_type   \
+            >::type                                                     \
+  _fw_method(_fw_method##MapKey_t key,                                  \
+             BTs ...args) const {                                       \
+    static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
+                  "consultation is available for const methods only");  \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _fw_method##internal_encaps();                                  \
+        auto alt =                                                      \
+            _fw_method##get_alternative<decltype(fun), fun>();          \
+        if(nullptr != alt)                                              \
+          return (this->*alt)(std::forward<BTs>(args)...);              \
+        return (_member_rawptr)->                                       \
+            _consult_method<MMType, fun>(key,                           \
+                                         std::forward<BTs>(args)...);   \
   }                                                                     \
                                                                         \
-  template<typename ...ATs,                                             \
+  template<typename MMType,                                             \
+           MMType fun,                                                  \
            typename ...BTs,                                             \
            /* enable_if work is depends from a template parameter, */   \
-           /* using sizeof(ATs) for that*/                              \
+           /* using sizeof(BTs) for that*/                              \
            typename std::						\
-	   enable_if<(sizeof...(ATs),					\
+	   enable_if<(sizeof...(BTs),					\
 		      /* if _fw_method##MapKey_t is the same */		\
 		      /* type as nullptr then this forward does */	\
 		      /* not require map key forwarding*/		\
 		      !std::is_same<decltype(nullptr),			\
 		      _fw_method##MapKey_t >::value)>::type* = nullptr>	\
-  inline void _fw_method(                                               \
-      _fw_method##MapKey_t key,                                         \
-      void( _fw_method##Consult_t ::*function)(ATs...) const,           \
-      BTs ...args) const {                                              \
-    (_member_rawptr)->_consult_method<ATs...>(                          \
-        std::forward< _fw_method##MapKey_t >(key),                      \
-        std::forward<void( _fw_method##Consult_t ::*)(ATs...) const>(   \
-            function),                                                  \
-        std::forward<BTs>(args)...);                                    \
-  }									\
+  inline typename std::                                                 \
+  enable_if<std::is_same<void,                                          \
+                         typename nicobou::                             \
+                         method_traits<MMType, fun>::return_type>::value \
+            >::type                                                     \
+  _fw_method(_fw_method##MapKey_t key,                                  \
+             BTs ...args) const {                                       \
+    static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
+                  "consultation is available for const methods only");  \
+    /* __attribute__((unused)) tells compiler encap is not used*/       \
+    auto encap __attribute__((unused)) =                                \
+        _fw_method##internal_encaps();                                  \
+        auto alt =                                                      \
+            _fw_method##get_alternative<decltype(fun), fun>();          \
+            if(nullptr != alt)                                          \
+              (this->*alt)(std::forward<BTs>(args)...);                 \
+            else                                                        \
+              (_member_rawptr)->_consult_method<MMType, fun>(           \
+                  key,                                                  \
+                  std::forward<BTs>(args)...);                          \
+                                                                        \
+  }                                                                     \
+
 
 #define Forward_consultable_default(...)                   \
   Forward_consultable_full(__VA_ARGS__, const_only)

@@ -94,15 +94,50 @@ class Box {
   };
   torPrinter encapsulated() const {return torPrinter();}
   Encapsulate_consultable(fwd_first, torPrinter, encapsulated);
+};  // class Box
+
+class BoxOwner{
+ public:
+  Forward_consultable(BoxOwner, Box, &b_, fwd_first, fwd_last);
+  // selective encapsulation of string Widget::get_name(int)
+  Overload_consultable(fwd_last,
+                       Const_Overload_Type(&Widget::get_name, Widget, string, int),
+                       &Widget::get_name,
+                       &BoxOwner::get_name_wrapper);
+ private:
+  Box b_{};
+
+  string get_name_wrapper(int a) const {return std::to_string(a) + " from BoxOwner";}
+
+  struct torPrinter{
+    torPrinter(){ cout << "cctor "; }
+    ~torPrinter(){ cout << "ddtor\n"; }
+  };
+  torPrinter encapsulated() const {return torPrinter();}
+  Encapsulate_consultable(fwd_last, torPrinter, encapsulated);
 };
 
 int main() {
-  Box b{};
-  // prints "First"
-  cout  << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
-        << endl;
-  // prints "34 from box" 
-  cout << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string, int)>(1234, 34)   
-       << endl; 
+
+  {  // testing use of forwarding from container
+    Box b{};
+    // prints "First"
+    cout  << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
+          << endl;
+    // prints "34 from box" 
+    cout << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string, int)>(1234, 34)   
+         << endl; 
+  }
+
+   {  // testing the use of forwaring after forwarding from container
+     BoxOwner bo{};
+     // prints "First"
+     cout  << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
+           << endl;
+    // prints "34 from box" 
+    cout << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string, int)>(1234, 34)   
+         << endl; 
+   }
+
   return 0;
 }
