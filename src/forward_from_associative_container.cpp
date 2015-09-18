@@ -69,8 +69,7 @@ class Box {
                  &Box::get_name_wrapper);
 
  private:
-  // container must be mutable in order to access it from const methods
-  mutable std::map<int, std::unique_ptr<WidgetOwner>> wos_;
+  std::map<int, std::unique_ptr<WidgetOwner>> wos_;
   
   // will be used by Forward_consultable_from_associative_container
   std::pair<bool, WidgetOwner *> find_wos_element(int key) const{
