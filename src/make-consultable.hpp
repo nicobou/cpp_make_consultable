@@ -30,20 +30,20 @@
 #include <cstddef> // size_t
 #include <tuple>  // method_traits args and std::get
 
-// selecting method and Overload for template parameter of consultation method
-#define Method(_method_ptr)                     \
+// selecting method and OPtr for template parameter of consultation method
+#define MPtr(_method_ptr)                     \
   decltype(_method_ptr), _method_ptr            
 
-#define Overload(_PTR, _C, _R, ...)                             \
+#define OPtr(_PTR, _C, _R, ...)                             \
   decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR)), _PTR
 
-#define Const_Overload(_PTR, _C, _R, ...)                               \
+#define COPtr(_PTR, _C, _R, ...)                               \
   decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR)), _PTR
 
-#define Const_Overload_Type(_PTR, _C, _R, ...)                  \
+#define COvT(_PTR, _C, _R, ...)                  \
   decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR))
 
-#define Overload_Type(_PTR, _C, _R, ...)                \
+#define OvT(_PTR, _C, _R, ...)                \
   decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR))
 
 

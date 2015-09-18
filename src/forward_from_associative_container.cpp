@@ -64,7 +64,7 @@ class Box {
       fwd_first);
   // selective encapsulation of string Widget::get_name(int)
   Selective_hook(fwd_first,
-                 Const_Overload_Type(&Widget::get_name, Widget, string, int),
+                 COvT(&Widget::get_name, Widget, string, int),
                  &Widget::get_name,
                  &Box::get_name_wrapper);
 
@@ -108,7 +108,7 @@ class BoxOwner{
   Forward_consultable(BoxOwner, Box, &b_, fwd_first, fwd_last);
   // selective encapsulation of string Widget::get_name(int)
   Selective_hook(fwd_last,
-                 Const_Overload_Type(&Widget::get_name, Widget, string, int),
+                 COvT(&Widget::get_name, Widget, string, int),
                  &Widget::get_name,
                  &BoxOwner::get_name_wrapper);
  private:
@@ -129,24 +129,24 @@ int main() {
   {  // testing use of forwarding from container
     Box b{};
     // prints "First"
-    cout  << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
+    cout  << b.fwd_first<COPtr(&Widget::get_name, Widget, string)>(1234) 
           << endl;
     // prints "34 from box" 
-    cout << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string, int)>(1234, 34)   
+    cout << b.fwd_first<COPtr(&Widget::get_name, Widget, string, int)>(1234, 34)   
          << endl; 
   }
 
   {  // testing the use of forwaring after forwarding from container
      BoxOwner bo{};
     // prints "First"
-    cout  << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string)>(1234) 
+    cout  << bo.fwd_last<COPtr(&Widget::get_name, Widget, string)>(1234) 
           << endl;
     // prints "34 from box" 
-    cout << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string, int)>(1234, 34)   
+    cout << bo.fwd_last<COPtr(&Widget::get_name, Widget, string, int)>(1234, 34)   
          << endl; 
     // 666 is not a valid key, so the following invocation
     // will call "construct_error_return<string>(int)" (which is calling assert):
-    // cout << bo.fwd_last<Const_Overload(&Widget::get_name, Widget, string)>(666)   
+    // cout << bo.fwd_last<COPtr(&Widget::get_name, Widget, string)>(666)   
     //      << endl; 
   }
  

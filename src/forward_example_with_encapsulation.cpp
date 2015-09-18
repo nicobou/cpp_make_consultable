@@ -50,7 +50,7 @@ class Box {
   Forward_consultable(Box, WidgetOwner, &wo_, consult_first, fwd_first);
   Forward_consultable(Box, WidgetOwner, &wo_, consult_second, fwd_second);
   Selective_hook(fwd_second,
-                 Const_Overload_Type(&Widget::get_name, Widget, string),
+                 COvT(&Widget::get_name, Widget, string),
                  &Widget::get_name,
                  &Box::get_name_wrapper);
  private:
@@ -67,8 +67,8 @@ class Box {
 
 int main() {
   Box b{};
-  cout << b.fwd_first<Const_Overload(&Widget::get_name, Widget, string)>()        // prints First
-       << b.fwd_second<Const_Overload(&Widget::get_name, Widget, string, int)>(2) // prints Second2
+  cout << b.fwd_first<COPtr(&Widget::get_name, Widget, string)>()        // prints First
+       << b.fwd_second<COPtr(&Widget::get_name, Widget, string, int)>(2) // prints Second2
        << endl; 
   return 0;
 }

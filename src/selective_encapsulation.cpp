@@ -67,11 +67,11 @@ class WidgetOwner {
 
 int main() {
   WidgetOwner wo;                                                   // print:
-  cout << wo.consult_first<Method(&Widget::get_name)>() << endl;    // first
-  cout << wo.consult_second<Method(&Widget::get_name)>() << endl;   // second
-  cout << wo.consult_second<Method(&Widget::hello)>("you") << endl; // hello you
+  cout << wo.consult_first<MPtr(&Widget::get_name)>() << endl;    // first
+  cout << wo.consult_second<MPtr(&Widget::get_name)>() << endl;   // second
+  cout << wo.consult_second<MPtr(&Widget::hello)>("you") << endl; // hello you
       
   // the following is failling to compile
   // because Widget::set_name is not const
-  //wo.consult_first<Method(&Widget::set_name)>("third");
+  //wo.consult_first<MPtr(&Widget::set_name)>("third");
 }

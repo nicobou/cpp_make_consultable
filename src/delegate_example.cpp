@@ -61,13 +61,13 @@ int main() {
   // testing access when owning WidgetOwner
   WidgetOwner wo{};
   // both invokation are allowed since first_ and second are delegated
-  cout << wo.use_first<Method(&Widget::hello)>("you") << endl;   // hello you
-  cout << wo.use_second<Method(&Widget::hello)>("you") << endl;  // hello you
+  cout << wo.use_first<MPtr(&Widget::hello)>("you") << endl;   // hello you
+  cout << wo.use_second<MPtr(&Widget::hello)>("you") << endl;  // hello you
 
   // testing access when owning Box 
   Box b{};
   // compile error first_ is now a consultable:
-  // cout << b.fwd_first<Method(&Widget::hello)>("you") << endl;  
+  // cout << b.fwd_first<MPtr(&Widget::hello)>("you") << endl;  
   //  OK, second_ is a delegate:
-  cout << b.fwd_second<Method(&Widget::hello)>("you") << endl;   // hello you
+  cout << b.fwd_second<MPtr(&Widget::hello)>("you") << endl;   // hello you
 }
