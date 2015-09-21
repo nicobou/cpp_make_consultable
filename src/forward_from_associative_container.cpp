@@ -93,7 +93,8 @@ class Box {
     return ReturnType();
   }
 
-  string get_name_wrapper(int a) const {return std::to_string(a) + " from Box";}
+  string get_name_wrapper(const int &key, int a) const {return std::to_string(a)
+        + " from Box " + std::to_string(key);}
   // global encapsulation
   struct torPrinter{
     torPrinter(){ cout << "ctor "; }
@@ -114,7 +115,8 @@ class BoxOwner{
  private:
   Box b_{};
 
-  string get_name_wrapper(int a) const {return std::to_string(a) + " from BoxOwner";}
+  string get_name_wrapper(const int &key, int a) const {
+    return std::to_string(a) + " from BoxOwner " + std::to_string(key);}
 
   struct torPrinter{
     torPrinter(){ cout << "cctor "; }

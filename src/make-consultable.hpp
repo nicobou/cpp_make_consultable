@@ -77,14 +77,33 @@ struct method_traits<R(C::*)(Args...), fn_ptr>{
 
 // copy a method signature from a class and make the equivalenent
 // signature but as a member of an other type
-template<typename M, typename T>
+template<typename M, typename T, typename PrefixType>
 struct method_convert;
 // const
 template<typename C,
          typename R,
          typename ...Args,
+         typename T,
+         typename PrefixType>
+struct method_convert<R(C::*)(Args...) const, T, PrefixType>{
+  using type = R(T::*)(PrefixType, Args...) const;
+};
+// non const
+template<typename C,
+         typename R,
+         typename ...Args,
+         typename T,
+         typename PrefixType>
+struct method_convert<R(C::*)(Args...), T, PrefixType>{
+  using type = R(T::*)(PrefixType, Args...);
+};
+
+// const
+template<typename C,
+         typename R,
+         typename ...Args,
          typename T>
-struct method_convert<R(C::*)(Args...) const, T>{
+struct method_convert<R(C::*)(Args...) const, T, std::nullptr_t>{
   using type = R(T::*)(Args...) const;
 };
 // non const
@@ -92,7 +111,7 @@ template<typename C,
          typename R,
          typename ...Args,
          typename T>
-struct method_convert<R(C::*)(Args...), T>{
+struct method_convert<R(C::*)(Args...), T, std::nullptr_t>{
   using type = R(T::*)(Args...);
 };
 
@@ -125,7 +144,8 @@ struct _consult_or_fw_method##alternative_member_<                      \
   /* is possibly not yet declared */                                    \
   static typename nicobou::                                             \
     method_convert<_delegated_method_type,                              \
-                   _consult_or_fw_method##self_type>::type              \
+                   _consult_or_fw_method##self_type,                    \
+                   _consult_or_fw_method##MapKey_t>::type               \
     get() {                                                             \
       return _alternative_method_ptr;                                   \
     }                                                                   \
@@ -161,7 +181,8 @@ struct _consult_or_fw_method##alternative_member_<                      \
            typename DUMMY = void>                                       \
   struct _consult_or_fw_method##alternative_member_ {                   \
     static typename nicobou::                                           \
-    method_convert<MemberType, _consult_or_fw_method##self_type>::type  \
+    method_convert<MemberType, _consult_or_fw_method##self_type,        \
+                   _consult_or_fw_method##MapKey_t>::type               \
     get() {                                                             \
       return nullptr;                                                   \
     };                                                                  \
@@ -169,7 +190,8 @@ struct _consult_or_fw_method##alternative_member_<                      \
   /*getting alternative invocation */                                   \
   template<typename MemberType, MemberType ptr>                         \
   static typename nicobou::                                             \
-  method_convert<MemberType, _consult_or_fw_method##self_type>::type    \
+  method_convert<MemberType, _consult_or_fw_method##self_type,          \
+                 _consult_or_fw_method##MapKey_t>::type                 \
   _consult_or_fw_method##get_alternative() {                            \
     return                                                              \
     _consult_or_fw_method##alternative_member_<MemberType, ptr>::get(); \
@@ -518,7 +540,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
     auto alt =                                                          \
         _fw_method##get_alternative<decltype(fun), fun>();              \
     if(nullptr != alt)                                                  \
-      return (this->*alt)(std::forward<BTs>(args)...);                  \
+      return (this->*alt)(key, std::forward<BTs>(args)...);             \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _fw_method##internal_encaps();                                  \
@@ -551,7 +573,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
     auto alt =                                                          \
         _fw_method##get_alternative<decltype(fun), fun>();              \
     if(nullptr != alt) {                                                \
-      (this->*alt)(std::forward<BTs>(args)...);                         \
+      (this->*alt)(key, std::forward<BTs>(args)...);                     \
       return;                                                           \
     }                                                                   \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
@@ -630,7 +652,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
       auto alt =                                                        \
           _fw_method##get_alternative<decltype(fun), fun>();            \
       if(nullptr != alt)                                                \
-        return (this->*alt)(std::forward<BTs>(args)...);                \
+        return (this->*alt)(key, std::forward<BTs>(args)...);           \
       /* __attribute__((unused)) tells compiler encap is not used: */   \
       auto encap __attribute__((unused)) =                              \
           _fw_method##internal_encaps();                                \
@@ -661,7 +683,7 @@ struct _consult_or_fw_method##alternative_member_<                      \
     auto alt =                                                          \
         _fw_method##get_alternative<decltype(fun), fun>();              \
     if(nullptr != alt) {                                                \
-          (this->*alt)(std::forward<BTs>(args)...);                     \
+      (this->*alt)(key, std::forward<BTs>(args)...);                    \
           return;                                                       \
     }                                                                   \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
