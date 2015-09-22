@@ -641,6 +641,10 @@ struct _consult_or_fw_method##alternative_member_<                      \
         BTs ...args) const {                                            \
       static_assert(nicobou::method_traits<MMType, fun>::is_const,      \
                     "consultation is available for const methods only"); \
+      auto alt =                                                        \
+          _fw_method##get_alternative<decltype(fun), fun>();            \
+      if(nullptr != alt)                                                \
+        return (this->*alt)(key, std::forward<BTs>(args)...);           \
       /* finding object */                                              \
       auto consultable = _accessor_method (key);                        \
       if (!std::get<0>(consultable))                                    \
@@ -649,10 +653,6 @@ struct _consult_or_fw_method##alternative_member_<                      \
                                            method_traits<MMType, fun>:: \
                                            return_type>(key);           \
       /*we have the object, continue*/                                  \
-      auto alt =                                                        \
-          _fw_method##get_alternative<decltype(fun), fun>();            \
-      if(nullptr != alt)                                                \
-        return (this->*alt)(key, std::forward<BTs>(args)...);           \
       /* __attribute__((unused)) tells compiler encap is not used: */   \
       auto encap __attribute__((unused)) =                              \
           _fw_method##internal_encaps();                                \
@@ -673,6 +673,12 @@ struct _consult_or_fw_method##alternative_member_<                      \
       BTs ...args) const {                                              \
     static_assert(nicobou::method_traits<MMType, fun>::is_const,        \
                   "consultation is available for const methods only");  \
+    auto alt =                                                          \
+        _fw_method##get_alternative<decltype(fun), fun>();              \
+    if(nullptr != alt) {                                                \
+      (this->*alt)(key, std::forward<BTs>(args)...);                    \
+          return;                                                       \
+    }                                                                   \
       /* finding object */                                              \
     auto consultable = _accessor_method(key);                           \
     if (!std::get<0>(consultable))                                      \
@@ -680,12 +686,6 @@ struct _consult_or_fw_method##alternative_member_<                      \
           _on_error_construct_ret_method<typename nicobou::             \
                                          method_traits<MMType, fun>::   \
                                          return_type>(key);             \
-    auto alt =                                                          \
-        _fw_method##get_alternative<decltype(fun), fun>();              \
-    if(nullptr != alt) {                                                \
-      (this->*alt)(key, std::forward<BTs>(args)...);                    \
-          return;                                                       \
-    }                                                                   \
     /* __attribute__((unused)) tells compiler encap is not used*/       \
     auto encap __attribute__((unused)) =                                \
         _fw_method##internal_encaps();                                  \
