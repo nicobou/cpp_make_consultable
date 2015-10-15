@@ -27,7 +27,7 @@
 #include <memory>
 #include <utility>  // make_pair
 #include <cassert>
-#include "./make-consultable.hpp"
+#include "../make-consultable.hpp"
 
 using namespace std;
 

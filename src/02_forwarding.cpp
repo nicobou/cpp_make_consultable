@@ -27,35 +27,36 @@
 
 using namespace std;
 
-class Widget {
+class Name {
  public:
-  Widget(const string &str): name_(str){}
-  string get_name() const {return name_;}
+  Name(const string &name): name_(name){}
+  string get() const { return name_; }
+  void print() const { cout << name_; }
+  // ...
  private:
-  string name_;
+  string name_{};
 };
 
-class WidgetOwner {
+class NameOwner {
  public:
-  Make_consultable(WidgetOwner, Widget, &first_, consult_first);
-  Make_consultable(WidgetOwner, Widget, &second_, consult_second);
+  Make_consultable(NameOwner, Name, &first_, first);
+  Make_consultable(NameOwner, Name, &second_, second);
  private:
-  Widget first_{"First"};
-  Widget second_{"Second"};
+  Name first_{"Augusta"};
+  Name second_{"Ada"};
 };
 
 class Box {
  public:
-  Forward_consultable(Box, WidgetOwner, &wo_, consult_first, fwd_first);
-  Forward_consultable(Box, WidgetOwner, &wo_, consult_second, fwd_second);
+  Forward_consultable(Box, NameOwner, &nown_, first, fwd_first);
+  Forward_consultable(Box, NameOwner, &nown_, second, fwd_second);
  private:
-  WidgetOwner wo_;
+  NameOwner nown_{};
 };
 
 int main() {
-  Box b{};
-  cout << b.fwd_first<MPtr(&Widget::get_name)>()   // prints First
-       << b.fwd_second<MPtr(&Widget::get_name)>()  // prints Second
+  Box b;
+  cout << b.fwd_first<MPtr(&Name::get)>()  // Augusta
+       << b.fwd_second<MPtr(&Name::get)>() // Ada
        << endl; 
-  return 0;
 }

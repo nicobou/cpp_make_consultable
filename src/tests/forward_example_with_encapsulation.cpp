@@ -23,55 +23,52 @@
 
 #include <string>
 #include <iostream>
-#include "./make-consultable.hpp"
+#include "../make-consultable.hpp"
 
 using namespace std;
 
-struct torPrinter{
-  torPrinter(){ cout << "ctor "; }
-  ~torPrinter(){ cout << "dtor\n"; }
-};
-
 class Widget {
  public:
-  Widget(const string &name): name_(name){}
-  string get_name() const { return name_; }
-  string hello(const string &str) const {return "hello " + str;};
-  void set_name(const string &name) { name_ = name; }
-  
+  Widget(const string &str): name_(str){}
+  string get_name() const {return name_;}
+  string get_name(int a) const {return name_ + std::to_string(a);}
  private:
-  string name_{};
+  string name_;
 };
 
 class WidgetOwner {
  public:
   Make_consultable(WidgetOwner, Widget, &first_, consult_first);
   Make_consultable(WidgetOwner, Widget, &second_, consult_second);
-  Selective_hook(consult_second,
-                 decltype(&Widget::hello),
-                 &Widget::hello,
-                 &WidgetOwner::hello_wrapper);
-
  private:
-  Widget first_{"first"};
-  Widget second_{"second"};
-  // encapsulating the call to Widget::hello
-  string hello_wrapper(const string &str) const {
-    string res("overloaded -" + second_.hello(str) + "-");
-    return res;
-  }
-  // encapsulation for each call by user (global encapsulation)
+  Widget first_{"First"};
+  Widget second_{"Second"};
+};
+
+class Box {
+ public:
+  Forward_consultable(Box, WidgetOwner, &wo_, consult_first, fwd_first);
+  Forward_consultable(Box, WidgetOwner, &wo_, consult_second, fwd_second);
+  Selective_hook(fwd_second,
+                 COvT(&Widget::get_name, Widget, string),
+                 &Widget::get_name,
+                 &Box::get_name_wrapper);
+ private:
+  WidgetOwner wo_;
+  string get_name_wrapper() const {return "box";}
+  // global encapsulation
+  struct torPrinter{
+    torPrinter(){ cout << "ctor "; }
+    ~torPrinter(){ cout << "dtor\n"; }
+  };
   torPrinter encapsulated() const {return torPrinter();}
-  Global_wrap(consult_second, torPrinter, encapsulated);
+  Global_wrap(fwd_first, torPrinter, encapsulated);
 };
 
 int main() {
-  WidgetOwner wo;                                                   // print:
-  cout << wo.consult_first<MPtr(&Widget::get_name)>() << endl;    // first
-  cout << wo.consult_second<MPtr(&Widget::get_name)>() << endl;   // second
-  cout << wo.consult_second<MPtr(&Widget::hello)>("you") << endl; // hello you
-      
-  // the following is failling to compile
-  // because Widget::set_name is not const
-  //wo.consult_first<MPtr(&Widget::set_name)>("third");
+  Box b{};
+  cout << b.fwd_first<COPtr(&Widget::get_name, Widget, string)>()        // prints First
+       << b.fwd_second<COPtr(&Widget::get_name, Widget, string, int)>(2) // prints Second2
+       << endl; 
+  return 0;
 }

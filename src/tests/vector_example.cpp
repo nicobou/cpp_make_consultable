@@ -21,46 +21,40 @@
  * THE SOFTWARE.
  */
 
-#include <string>
+#include <vector>
 #include <iostream>
-#include "./make-consultable.hpp"
+#include "../make-consultable.hpp"
 
 using namespace std;
 
-class Widget {
- public:
-  string hello() const {
-    return "hello";
-  }
-  string hello(const string &str) const {
-    return "hello " + str;
-  }
-};
+using vect_t = std::vector<int>;
+using cref_t = vect_t::const_reference;
+using vsize_t = vect_t::size_type;
 
-class WidgetOwner {
+class VectorOwner {
  public:
-  Make_consultable(WidgetOwner, Widget, &first_, consult_first);
+  Make_consultable(VectorOwner, vect_t, &first_, consult_first);
+  Make_consultable(VectorOwner, vect_t, &second_, consult_second);
 
  private:
-  Widget first_{};
+  vect_t first_{{10, 20, 30}};
+  vect_t second_{{40, 50}};
 };
 
 int main() {
-  WidgetOwner wo{};
-  // in case of overloads, signature types give as template parameter
-  // allows to distinguishing which overload to select
-  cout  << wo.consult_first<COPtr(&Widget::hello, Widget, string)>() // hello
-        << endl
-        << wo.consult_first<COPtr(&Widget::hello, Widget, string, const string &)>(
-            std::string("you"))                                               // hello you
-        << endl;
-  
-  // static_cast allows for more verbosely selecting the wanted
-  cout << wo.consult_first<
-    decltype(static_cast<string(Widget::*)() const>(&Widget::hello)),
-            &Widget::hello                                                    // hello
-            >()
+  VectorOwner wo;                                                         // print:
+  cout << wo.consult_first<MPtr(&vect_t::size)>()                       // 3
+       << wo.consult_second<MPtr(&vect_t::size)>()                      // 2
+       << *wo.consult_second<MPtr(&vect_t::cbegin)>()                   // 40
+       << wo.consult_second<
+         COPtr(&vect_t::operator[], vect_t, cref_t, vsize_t)>(1) // 50
        << endl;
-  
-  return 0;
+
+  for (auto it = wo.consult_first<MPtr(&vect_t::cbegin)>();
+       it !=  wo.consult_first<MPtr(&vect_t::cend)>();
+       ++it) {                                                            //102030
+    std::cout << *it;                                
+  }
+  std::cout << std::endl;
+
 }
