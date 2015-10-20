@@ -1,7 +1,8 @@
 all: 01_consultable     \
      02_forwarding      \
      03_hooking         \
-     04_global_wrapping
+     04_global_wrapping \
+     05_type_mosaicing
 
 01_consultable: 01_consultable.cpp
 	g++ -std=c++11 -o 01_consultable-gcc -Wall -Werror -Wfatal-errors 01_consultable.cpp 
@@ -19,6 +20,10 @@ all: 01_consultable     \
 	g++ -std=c++11 -o 04_global_wrapping-gcc -Wall -Werror -Wfatal-errors 04_global_wrapping.cpp 
 	clang++ -std=c++11 -o 04_global_wrapping-clang -Wall -Werror -Wfatal-errors 04_global_wrapping.cpp 
 
+05_type_mosaicing: 05_type_mosaicing.cpp
+	g++ -std=c++11 -o 05_type_mosaicing-gcc -Wall -Werror -Wfatal-errors 05_type_mosaicing.cpp 
+	clang++ -std=c++11 -o 05_type_mosaicing-clang -Wall -Werror -Wfatal-errors 05_type_mosaicing.cpp 
+
 test:
 	./01_consultable-gcc
 	./01_consultable-clang
@@ -28,9 +33,12 @@ test:
 	./03_hooking-clang
 	./04_global_wrapping-gcc
 	./04_global_wrapping-clang
+	./05_type_mosaicing-gcc
+	./05_type_mosaicing-clang
 
 clean:
 	rm ./01_consultable-gcc ./01_consultable-clang           \
            ./02_forwarding-gcc ./02_forwarding-clang             \
            ./03_hooking-gcc ./03_hooking-clang                   \
-           ./04_global_wrapping-gcc ./04_global_wrapping-clang
+           ./04_global_wrapping-gcc ./04_global_wrapping-clang   \
+           ./05_type_mosaicing-gcc ./05_type_mosaicing-clang

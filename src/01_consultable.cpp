@@ -48,7 +48,6 @@ class NameOwner {
 
 int main() {
   NameOwner nown;
-  cout << nown.first<MPtr(&Name::get)>()  // Augusta
-       << nown.second<MPtr(&Name::get)>() // Ada
-       << endl;
+  nown.first<MPtr(&Name::print)>();  // Augusta
+  nown.second<MPtr(&Name::print)>(); // Ada
 }

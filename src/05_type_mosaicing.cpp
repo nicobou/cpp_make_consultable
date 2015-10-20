@@ -27,35 +27,43 @@
 
 using namespace std;
 
-class Name {
+template<typename T> class Prop {
  public:
-  Name(const string &name): name_(name){}
-  string get() const { return name_; }
-  void print() const { cout << name_; }
-  // ...
+  Prop() = default;
+  Prop(const T &val) : val_(val){}
+  T get() const { return val_; }
+  void set(const T &val) { val_ = val; }
  private:
-  string name_{};
+  T val_{};
 };
 
-class NameOwner {
+class Element {
  public:
-  Make_consultable(NameOwner, Name, &first_, first);
-  Make_consultable(NameOwner, Name, &second_, second);
+  Element(string info, int num) : info_(info), num_(num){}
+  Make_delegate(Element, Prop<string>, &last_msg_, last_msg);
+  Make_consultable(Element, Prop<int>, &num_, num);
+  Make_consultable(Element, Prop<string>, &info_, info);
+ protected:
+  Make_delegate(Element, Prop<string>, &info_, protected_info);
  private:
-  Name first_{"Augusta"};
-  Name second_{"Ada"};
+  Prop<string> last_msg_{};
+  Prop<string> info_{};
+  Prop<int> num_{0};
 };
 
-class Box {
- public:
-  Forward_consultable(Box, NameOwner, &nown_, first, fwd_first);
-  Forward_consultable(Box, NameOwner, &nown_, second, fwd_second);
- private:
-  NameOwner nown_{};
+struct Countess : public Element {
+  Countess() : Element("programmer", 1){}
+  void mutate(){
+    protected_info<MPtr(&Prop<string>::set)>("mathematician");
+  }
 };
 
 int main() {
-  Box b;
-  b.fwd_first<MPtr(&Name::print)>();  // Augusta
-  b.fwd_second<MPtr(&Name::print)>(); // Ada
+  Countess a;
+  a.last_msg<MPtr(&Prop<string>::set)>("Analytical Engine");
+  cout << a.num<MPtr(&Prop<int>::get)>();      // "1"
+  // a.info<MPtr(&Prop<string>::set)>("...");  // does not compile
+  cout << a.info<MPtr(&Prop<string>::get)>();  // "programmer"
+  a.mutate();
+  cout << a.info<MPtr(&Prop<string>::get)>();  // "mathematician"
 }
