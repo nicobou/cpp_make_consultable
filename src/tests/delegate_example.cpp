@@ -23,33 +23,51 @@
 
 #include <string>
 #include <iostream>
-#include <functional>
-#include "./make-consultable.hpp"
+#include "../make-consultable.hpp"
+
+using namespace std;
 
 class Widget {
  public:
-  // make a setter consultable from inside the delegate 
-  // set_callback needs to be const and cb_ needs to be mutable
-  void set_callback(std::function<void ()> cb) const {
-    cb_ = cb;
+  // a non-const method:
+  std::string hello(const std::string &str) {
+    last_hello_ = str;
+    return "hello " + str;
   }
  private:
-  mutable std::function<void()> cb_{nullptr};
+  std::string last_hello_{};
 };
 
 class WidgetOwner {
  public:
-  Make_consultable(Widget, &first_, consult_first);
+  // all public methods are enabled with delegates:
+  Make_delegate(WidgetOwner, Widget, &first_, use_first);
+  Make_delegate(WidgetOwner, Widget, &second_, use_second);
   
-  private:
+ private:
   Widget first_{};
+  Widget second_{};
+};
+
+class Box {
+ public:
+  Forward_consultable(Box, WidgetOwner, &wo_, use_first, fwd_first);
+  Forward_delegate(Box, WidgetOwner, &wo_, use_second, fwd_second);
+ private:
+  WidgetOwner wo_;
 };
 
 int main() {
+  // testing access when owning WidgetOwner
   WidgetOwner wo{};
-  // accessing set_name (made const from the Widget)
-  wo.consult_first(&Widget::set_callback, [](){
-      std::cout << "callback" << std::endl;
-    });
-  return 0;
+  // both invokation are allowed since first_ and second are delegated
+  cout << wo.use_first<MPtr(&Widget::hello)>("you") << endl;   // hello you
+  cout << wo.use_second<MPtr(&Widget::hello)>("you") << endl;  // hello you
+
+  // testing access when owning Box 
+  Box b{};
+  // compile error first_ is now a consultable:
+  // cout << b.fwd_first<MPtr(&Widget::hello)>("you") << endl;  
+  //  OK, second_ is a delegate:
+  cout << b.fwd_second<MPtr(&Widget::hello)>("you") << endl;   // hello you
 }

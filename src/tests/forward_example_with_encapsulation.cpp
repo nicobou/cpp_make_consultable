@@ -23,51 +23,52 @@
 
 #include <string>
 #include <iostream>
-#include "./make-consultable.hpp"
+#include "../make-consultable.hpp"
 
 using namespace std;
 
 class Widget {
  public:
-  // a non-const method:
-  std::string hello(const std::string &str) {
-    last_hello_ = str;
-    return "hello " + str;
-  }
+  Widget(const string &str): name_(str){}
+  string get_name() const {return name_;}
+  string get_name(int a) const {return name_ + std::to_string(a);}
  private:
-  std::string last_hello_{};
+  string name_;
 };
 
 class WidgetOwner {
  public:
-  // all public methods are enabled with delegates:
-  Make_delegate(Widget, &first_, use_first);
-  Make_delegate(Widget, &second_, use_second);
-  
-  private:
-  Widget first_{};
-  Widget second_{};
+  Make_consultable(WidgetOwner, Widget, &first_, consult_first);
+  Make_consultable(WidgetOwner, Widget, &second_, consult_second);
+ private:
+  Widget first_{"First"};
+  Widget second_{"Second"};
 };
 
 class Box {
  public:
-  Forward_consultable(WidgetOwner, &wo_, use_first, fwd_first);
-  Forward_delegate(WidgetOwner, &wo_, use_second, fwd_second);
+  Forward_consultable(Box, WidgetOwner, &wo_, consult_first, fwd_first);
+  Forward_consultable(Box, WidgetOwner, &wo_, consult_second, fwd_second);
+  Selective_hook(fwd_second,
+                 COvT(&Widget::get_name, Widget, string),
+                 &Widget::get_name,
+                 &Box::get_name_wrapper);
  private:
   WidgetOwner wo_;
+  string get_name_wrapper() const {return "box";}
+  // global encapsulation
+  struct torPrinter{
+    torPrinter(){ cout << "ctor "; }
+    ~torPrinter(){ cout << "dtor\n"; }
+  };
+  torPrinter encapsulated() const {return torPrinter();}
+  Global_wrap(fwd_first, torPrinter, encapsulated);
 };
 
 int main() {
-  // testing access when owning WidgetOwner
-  WidgetOwner wo{};
-  // both invokation are allowed since first_ and second are delegated
-  cout << wo.use_first(&Widget::hello, "you") << endl;   // hello you
-  cout << wo.use_second(&Widget::hello, "you") << endl;  // hello you
-
-  // testing access when owning Box 
   Box b{};
-  // compile error first_ is now a consultable:
-  // cout << b.fwd_first(&Widget::hello, "you") << endl;  
-  //  OK, second_ is a delegate:
-  cout << b.fwd_second(&Widget::hello, "you") << endl;   // hello you
+  cout << b.fwd_first<COPtr(&Widget::get_name, Widget, string)>()        // prints First
+       << b.fwd_second<COPtr(&Widget::get_name, Widget, string, int)>(2) // prints Second2
+       << endl; 
+  return 0;
 }

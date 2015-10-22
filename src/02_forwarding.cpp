@@ -27,38 +27,35 @@
 
 using namespace std;
 
-class Widget {
+class Name {
  public:
-  string hello() const {
-    return "hello";
-  }
-  string hello(const string &str) const {
-    return "hello " + str;
-  }
+  Name(const string &name): name_(name){}
+  string get() const { return name_; }
+  void print() const { cout << name_; }
+  // ...
+ private:
+  string name_{};
 };
 
-class WidgetOwner {
+class NameOwner {
  public:
-  Make_consultable(Widget, &first_, consult_first);
-
+  Make_consultable(NameOwner, Name, &first_, first);
+  Make_consultable(NameOwner, Name, &second_, second);
  private:
-  Widget first_{};
+  Name first_{"Augusta"};
+  Name second_{"Ada"};
+};
+
+class Box {
+ public:
+  Forward_consultable(Box, NameOwner, &nown_, first, fwd_first);
+  Forward_consultable(Box, NameOwner, &nown_, second, fwd_second);
+ private:
+  NameOwner nown_{};
 };
 
 int main() {
-  WidgetOwner wo{};
-  // in case of overloads, signature types give as template parameter
-  // allows to distinguishing which overload to select
-  cout << wo.consult_first<string>(&Widget::hello)    // hello
-       << wo.consult_first<string, const string &>(
-           &Widget::hello, std::string("ho"))        // hello you
-       << endl;
-       
-       // static_cast allows for more verbosely selecting the wanted
-       cout << wo.consult_first(
-           static_cast<string(Widget::*)(const string &) const>(&Widget::hello),
-           "you")                                     // hello you
-            << endl;
-       
-  return 0;
+  Box b;
+  b.fwd_first<MPtr(&Name::print)>();  // Augusta
+  b.fwd_second<MPtr(&Name::print)>(); // Ada
 }

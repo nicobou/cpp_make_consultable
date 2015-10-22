@@ -23,39 +23,44 @@
 
 #include <string>
 #include <iostream>
-#include "./make-consultable.hpp"
+#include "../make-consultable.hpp"
 
 using namespace std;
 
 class Widget {
  public:
-  Widget(const string &str): name_(str){}
-  string get_name() const {return name_;}
- private:
-  string name_;
+  string hello() const {
+    return "hello";
+  }
+  string hello(const string &str) const {
+    return "hello " + str;
+  }
 };
 
 class WidgetOwner {
  public:
-  Make_consultable(Widget, &first_, consult_first);
-  Make_consultable(Widget, &second_, consult_second);
- private:
-  Widget first_{"First"};
-  Widget second_{"Second"};
-};
+  Make_consultable(WidgetOwner, Widget, &first_, consult_first);
 
-class Box {
- public:
-  Forward_consultable(WidgetOwner, &wo_, consult_first, fwd_first);
-  Forward_consultable(WidgetOwner, &wo_, consult_second, fwd_second);
  private:
-  WidgetOwner wo_;
+  Widget first_{};
 };
 
 int main() {
-  Box b{};
-  cout << b.fwd_first(&Widget::get_name)   // prints First
-       << b.fwd_second(&Widget::get_name)  // prints Second
-       << endl; 
+  WidgetOwner wo{};
+  // in case of overloads, signature types give as template parameter
+  // allows to distinguishing which overload to select
+  cout  << wo.consult_first<COPtr(&Widget::hello, Widget, string)>() // hello
+        << endl
+        << wo.consult_first<COPtr(&Widget::hello, Widget, string, const string &)>(
+            std::string("you"))                                               // hello you
+        << endl;
+  
+  // static_cast allows for more verbosely selecting the wanted
+  cout << wo.consult_first<
+    decltype(static_cast<string(Widget::*)() const>(&Widget::hello)),
+            &Widget::hello                                                    // hello
+            >()
+       << endl;
+  
   return 0;
 }

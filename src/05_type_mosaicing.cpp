@@ -27,34 +27,44 @@
 
 using namespace std;
 
-class Widget {
+template<typename T> class Prop {
  public:
-  Widget(const string &name): name_(name){}
-  string get_name() const { return name_; }
-  string hello(const string str) const {return "hello " + str;};
-  void set_name(const string &name) { name_ = name; }
-  
+  Prop() = default;
+  Prop(const T &val) : val_(val){}
+  T get() const { return val_; }
+  void set(const T &val) { val_ = val; }
+  // ...
  private:
-   string name_{};
+  T val_{};
 };
 
-class WidgetOwner {
+class Element {
  public:
-  Make_consultable(Widget, &first_, consult_first);
-  Make_consultable(Widget, &second_, consult_second);
-
+  Element(string info, int num) : info_(info), num_(num){}
+  Make_consultable(Element, Prop<string>, &info_, info);
+  Make_consultable(Element, Prop<int>, &num_, num);
+  Make_delegate(Element, Prop<string>, &last_msg_, last_msg);
+ protected:
+  Make_delegate(Element, Prop<string>, &info_, prot_info);
  private:
-  Widget first_{"first"};
-  Widget second_{"second"};
+  Prop<string> info_{};
+  Prop<int> num_{0};
+  Prop<string> last_msg_{};
+};
+
+struct Countess : public Element {
+  Countess() : Element("programmer", 1){}
+  void mutate(){
+    prot_info<MPtr(&Prop<string>::set)>("mathematician");
+  }
 };
 
 int main() {
-  WidgetOwner wo;                                    // print:
-  cout << wo.consult_first(&Widget::get_name)       // first
-       << wo.consult_second(&Widget::get_name)      // second
-       << wo.consult_second(&Widget::hello, "you")  // hello you
-       << endl;
-  // the following is failling to compile
-  // because Widget::set_name is not const
-  // wo.consult_first(&Widget::set_name, "third");
+  Countess a;
+  a.last_msg<MPtr(&Prop<string>::set)>("Analytical Engine");
+  cout << a.num<MPtr(&Prop<int>::get)>();      // "1"
+  // a.info<MPtr(&Prop<string>::set)>("...");  // does not compile
+  cout << a.info<MPtr(&Prop<string>::get)>();  // "programmer"
+  a.mutate();
+  cout << a.info<MPtr(&Prop<string>::get)>();  // "mathematician"
 }

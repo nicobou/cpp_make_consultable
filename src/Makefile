@@ -1,53 +1,44 @@
-all: \
-    basic_example \
-    overload_example \
-    forward_example \
-    consultable_setters_example \
-    delegate_example \
-    vector_example 
+all: 01_consultable     \
+     02_forwarding      \
+     03_hooking         \
+     04_global_wrapping \
+     05_type_mosaicing
 
-basic_example: basic_example.cpp
-	g++ -std=c++11 -o basic_example-gcc -Wall -Werror -Wfatal-errors basic_example.cpp 
-	clang++ -std=c++11 -o basic_example-clang -Wall -Werror -Wfatal-errors basic_example.cpp 
+01_consultable: 01_consultable.cpp
+	g++ -std=c++11 -o 01_consultable-gcc -Wall -Werror -Wfatal-errors 01_consultable.cpp 
+	clang++ -std=c++11 -o 01_consultable-clang -Wall -Werror -Wfatal-errors 01_consultable.cpp 
 
-overload_example: overload_example.cpp
-	g++ -std=c++11 -o overload_example-gcc -Wall -Werror -Wfatal-errors overload_example.cpp 
-	clang++ -std=c++11 -o overload_example-clang -Wall -Werror -Wfatal-errors overload_example.cpp
+02_forwarding: 02_forwarding.cpp
+	g++ -std=c++11 -o 02_forwarding-gcc -Wall -Werror -Wfatal-errors 02_forwarding.cpp 
+	clang++ -std=c++11 -o 02_forwarding-clang -Wall -Werror -Wfatal-errors 02_forwarding.cpp 
 
-forward_example: forward_example.cpp
-	g++ -std=c++11 -o forward_example-gcc -Wall -Werror -Wfatal-errors forward_example.cpp 
-	clang++ -std=c++11 -o forward_example-clang -Wall -Werror -Wfatal-errors forward_example.cpp 
+03_hooking: 03_hooking.cpp
+	g++ -std=c++11 -o 03_hooking-gcc -Wall -Werror -Wfatal-errors 03_hooking.cpp 
+	clang++ -std=c++11 -o 03_hooking-clang -Wall -Werror -Wfatal-errors 03_hooking.cpp 
 
-consultable_setters_example: consultable_setters_example.cpp
-	g++ -std=c++11 -o consultable_setters_example-gcc -Wall -Werror -Wfatal-errors consultable_setters_example.cpp 
-	clang++ -std=c++11 -o consultable_setters_example-clang -Wall -Werror -Wfatal-errors consultable_setters_example.cpp 
+04_global_wrapping: 04_global_wrapping.cpp
+	g++ -std=c++11 -o 04_global_wrapping-gcc -Wall -Werror -Wfatal-errors 04_global_wrapping.cpp 
+	clang++ -std=c++11 -o 04_global_wrapping-clang -Wall -Werror -Wfatal-errors 04_global_wrapping.cpp 
 
-delegate_example: delegate_example.cpp
-	g++ -std=c++11 -o delegate_example-gcc -Wall -Werror -Wfatal-errors delegate_example.cpp 
-	clang++ -std=c++11 -o delegate_example-clang -Wall -Werror -Wfatal-errors delegate_example.cpp 
-
-vector_example: vector_example.cpp
-	g++ -std=c++11 -o vector_example-gcc -Wall -Werror -Wfatal-errors vector_example.cpp 
-	clang++ -std=c++11 -o vector_example-clang -Wall -Werror -Wfatal-errors vector_example.cpp 
+05_type_mosaicing: 05_type_mosaicing.cpp
+	g++ -std=c++11 -o 05_type_mosaicing-gcc -Wall -Werror -Wfatal-errors 05_type_mosaicing.cpp 
+	clang++ -std=c++11 -o 05_type_mosaicing-clang -Wall -Werror -Wfatal-errors 05_type_mosaicing.cpp 
 
 test:
-	./basic_example-gcc
-	./basic_example-clang
-	./overload_example-gcc
-	./overload_example-clang
-	./forward_example-gcc
-	./forward_example-clang
-	./consultable_setters_example-gcc
-	./consultable_setters_example-clang
-	./delegate_example-gcc
-	./delegate_example-clang
-	./vector_example-gcc
-	./vector_example-clang
+	./01_consultable-gcc
+	./01_consultable-clang
+	./02_forwarding-gcc
+	./02_forwarding-clang
+	./03_hooking-gcc
+	./03_hooking-clang
+	./04_global_wrapping-gcc
+	./04_global_wrapping-clang
+	./05_type_mosaicing-gcc
+	./05_type_mosaicing-clang
 
 clean:
-	rm basic_example-gcc basic_example-clang \
-           overload_example-gcc overload_example-clang \
-           forward_example-gcc forward_example-clang \
-           consultable_setters_example-gcc consultable_setters_example-clang \
-           delegate_example-gcc delegate_example-clang \
-           vector_example-gcc vector_example-clang
+	rm ./01_consultable-gcc ./01_consultable-clang           \
+           ./02_forwarding-gcc ./02_forwarding-clang             \
+           ./03_hooking-gcc ./03_hooking-clang                   \
+           ./04_global_wrapping-gcc ./04_global_wrapping-clang   \
+           ./05_type_mosaicing-gcc ./05_type_mosaicing-clang

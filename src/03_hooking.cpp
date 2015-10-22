@@ -21,40 +21,51 @@
  * THE SOFTWARE.
  */
 
-#include <vector>
+#include <string>
 #include <iostream>
 #include "./make-consultable.hpp"
 
 using namespace std;
 
-using vect_t = std::vector<int>;
-using cref_t = vect_t::const_reference;
-using vsize_t = vect_t::size_type;
-
-class VectorOwner {
+class Name {
  public:
-  Make_consultable(vect_t, &first_, consult_first);
-  Make_consultable(vect_t, &second_, consult_second);
-
+  Name(const string &name): name_(name){}
+  string get() const { return name_; }
+  void print() const { cout << name_; }
+  // ...
  private:
-  vect_t first_{{10, 20, 30}};
-  vect_t second_{{40, 50}};
+  string name_{};
+};
+
+class NameOwner {
+ public:
+  Make_consultable(NameOwner, Name, &first_, first);
+  Make_consultable(NameOwner, Name, &second_, second);
+ private:
+  Name first_{"Augusta"};
+  Name second_{"Ada"};
+};
+
+class Box2 {
+ public:
+  Forward_consultable(Box2, NameOwner, &nown_, first, fwd_first);
+  Forward_consultable(Box2, NameOwner, &nown_, second, fwd_second);
+  Selective_hook(fwd_second,
+                 decltype(&Name::get),
+                 &Name::get,
+                 &Box2::hooking_get);
+ private:
+  NameOwner nown_{};
+  string hooking_get() const {
+    return "hooked! (was "
+        + nown_.second<MPtr(&Name::get)>()
+        + ")";
+  }
 };
 
 int main() {
-  VectorOwner wo;                                   // print:
-  cout << wo.consult_first(&vect_t::size)           // 3
-       << wo.consult_second(&vect_t::size)          // 2
-       << *wo.consult_second(&vect_t::cbegin)       // 40
-       << wo.consult_second<cref_t, vsize_t>(
-           &vect_t::operator[], 1)                  // 50
-       << endl;
-
-  for (auto it = wo.consult_first(&vect_t::cbegin);
-       it !=  wo.consult_first(&vect_t::cend);
-       ++it) {                                      //102030
-    std::cout << *it;                                
-  }
-  std::cout << std::endl;
-
+  Box2 b;
+  cout << b.fwd_first<MPtr(&Name::get)>()  // Augusta
+       << b.fwd_second<MPtr(&Name::get)>() // hooked! (was Ada)
+       << endl; 
 }
