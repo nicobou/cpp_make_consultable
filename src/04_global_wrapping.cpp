@@ -55,8 +55,8 @@ class Box3 {
     torPrinter(){ cout << " ctor "; }
     ~torPrinter(){ cout << " dtor "; }
   };
-  torPrinter encapsulated() const {return torPrinter();}
-  Global_wrap(fwd_first, torPrinter, encapsulated);
+  torPrinter make_TorPrinter() const {return torPrinter();}
+  Global_wrap(fwd_first, torPrinter, make_TorPrinter);
 };
 
 int main() {

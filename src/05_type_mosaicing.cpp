@@ -33,6 +33,7 @@ template<typename T> class Prop {
   Prop(const T &val) : val_(val){}
   T get() const { return val_; }
   void set(const T &val) { val_ = val; }
+  // ...
  private:
   T val_{};
 };
@@ -40,21 +41,21 @@ template<typename T> class Prop {
 class Element {
  public:
   Element(string info, int num) : info_(info), num_(num){}
-  Make_delegate(Element, Prop<string>, &last_msg_, last_msg);
-  Make_consultable(Element, Prop<int>, &num_, num);
   Make_consultable(Element, Prop<string>, &info_, info);
+  Make_consultable(Element, Prop<int>, &num_, num);
+  Make_delegate(Element, Prop<string>, &last_msg_, last_msg);
  protected:
-  Make_delegate(Element, Prop<string>, &info_, protected_info);
+  Make_delegate(Element, Prop<string>, &info_, prot_info);
  private:
-  Prop<string> last_msg_{};
   Prop<string> info_{};
   Prop<int> num_{0};
+  Prop<string> last_msg_{};
 };
 
 struct Countess : public Element {
   Countess() : Element("programmer", 1){}
   void mutate(){
-    protected_info<MPtr(&Prop<string>::set)>("mathematician");
+    prot_info<MPtr(&Prop<string>::set)>("mathematician");
   }
 };
 
