@@ -49,12 +49,12 @@ class WidgetOwner {
 };
 
 int main() {
-  WidgetOwner wo;                                          // print:
-  cout << wo.consult_first<MPtr(&Widget::get_name)>()    // first
-       << wo.consult_second<MPtr(&Widget::get_name)>()   // second
-       << wo.consult_second<MPtr(&Widget::hello)>("you") // hello you
+  WidgetOwner wo;                                  // print:
+  cout << wo.consult_first<&Widget::get_name>()    // first
+       << wo.consult_second<&Widget::get_name>()   // second
+       << wo.consult_second<&Widget::hello>("you") // hello you
        << endl;
   // the following is failling to compile
   // because Widget::set_name is not const
-  // wo.consult_first<MPtr(&Widget::set_name, "third")>();
+  // wo.consult_first<&Widget::set_name, "third">();
 }

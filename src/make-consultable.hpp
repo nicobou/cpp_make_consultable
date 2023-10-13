@@ -35,7 +35,7 @@
   decltype(static_cast<_R(_C::*)(__VA_ARGS__)>(_PTR)), _PTR
 
 #define COPtr(_PTR, _C, _R, ...)                               \
-  decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR)), _PTR
+  static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR)
 
 #define COvT(_PTR, _C, _R, ...)                  \
   decltype(static_cast<_R(_C::*)(__VA_ARGS__) const>(_PTR))

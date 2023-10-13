@@ -57,8 +57,7 @@ int main() {
   
   // static_cast allows for more verbosely selecting the wanted
   cout << wo.consult_first<
-    decltype(static_cast<string(Widget::*)() const>(&Widget::hello)),
-            &Widget::hello                                                    // hello
+    static_cast<string(Widget::*)() const>(&Widget::hello)          // hello
             >()
        << endl;
   
