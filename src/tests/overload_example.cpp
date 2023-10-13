@@ -55,7 +55,7 @@ int main() {
             std::string("you"))                                               // hello you
         << endl;
   
-  // static_cast allows for more verbosely selecting the wanted
+  // static_cast allows for (more verbosely) selecting the wanted overload
   cout << wo.consult_first<
     static_cast<string(Widget::*)() const>(&Widget::hello)          // hello
             >()
