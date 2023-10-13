@@ -48,6 +48,6 @@ class NameOwner {
 
 int main() {
   NameOwner nown;
-  nown.first<MPtr(&Name::print)>();  // Augusta
-  nown.second<MPtr(&Name::print)>(); // Ada
+  nown.first<&Name::print>();  // Augusta
+  nown.second<&Name::print>(); // Ada
 }

@@ -54,7 +54,7 @@ void use_counter(CountOwner &countOwner
                  ){
   int i = 100000;
   while (--i >= 0){
-    countOwner.count<MPtr(&Count::incr)>();
+    countOwner.count<&Count::incr>();
   }
 }
 
@@ -64,6 +64,6 @@ int main() {
   std::thread th2(use_counter, std::ref(countOwner));
   th1.join();
   th2.join();
-  std::cout << std::to_string(countOwner.count<MPtr(&Count::get)>())
+  std::cout << std::to_string(countOwner.count<&Count::get>())
             << std::endl;
 }

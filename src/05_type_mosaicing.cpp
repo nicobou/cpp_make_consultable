@@ -55,16 +55,16 @@ class Element {
 struct Countess : public Element {
   Countess() : Element("programmer", 1){}
   void mutate(){
-    prot_info<MPtr(&Prop<string>::set)>("mathematician");
+    prot_info<&Prop<string>::set>("mathematician");
   }
 };
 
 int main() {
   Countess a;
-  a.last_msg<MPtr(&Prop<string>::set)>("Analytical Engine");
-  cout << a.num<MPtr(&Prop<int>::get)>();      // "1"
-  // a.info<MPtr(&Prop<string>::set)>("...");  // does not compile
-  cout << a.info<MPtr(&Prop<string>::get)>();  // "programmer"
+  a.last_msg<&Prop<string>::set>("Analytical Engine");
+  cout << a.num<&Prop<int>::get>();      // "1"
+  // a.info<&Prop<string>::set>("...");  // does not compile
+  cout << a.info<&Prop<string>::get>();  // "programmer"
   a.mutate();
-  cout << a.info<MPtr(&Prop<string>::get)>();  // "mathematician"
+  cout << a.info<&Prop<string>::get>();  // "mathematician"
 }

@@ -61,7 +61,7 @@ class Box3 {
 
 int main() {
   Box3 b;
-  b.fwd_first<MPtr(&Name::print)>();       // ctor Augusta dtor
-  cout << b.fwd_first<MPtr(&Name::get)>()  // ctor dtor Augusta
+  b.fwd_first<&Name::print>();       // ctor Augusta dtor
+  cout << b.fwd_first<&Name::get>()  // ctor dtor Augusta
        << endl; 
 }

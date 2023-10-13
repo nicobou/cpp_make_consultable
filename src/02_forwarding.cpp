@@ -56,6 +56,6 @@ class Box {
 
 int main() {
   Box b;
-  b.fwd_first<MPtr(&Name::print)>();  // Augusta
-  b.fwd_second<MPtr(&Name::print)>(); // Ada
+  b.fwd_first<&Name::print>();  // Augusta
+  b.fwd_second<&Name::print>(); // Ada
 }

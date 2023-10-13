@@ -58,14 +58,14 @@ class Box2 {
   NameOwner nown_{};
   string hooking_get() const {
     return "hooked! (was "
-        + nown_.second<MPtr(&Name::get)>()
+        + nown_.second<&Name::get>()
         + ")";
   }
 };
 
 int main() {
   Box2 b;
-  cout << b.fwd_first<MPtr(&Name::get)>()  // Augusta
-       << b.fwd_second<MPtr(&Name::get)>() // hooked! (was Ada)
+  cout << b.fwd_first<&Name::get>()  // Augusta
+       << b.fwd_second<&Name::get>() // hooked! (was Ada)
        << endl; 
 }
