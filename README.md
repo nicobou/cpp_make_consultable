@@ -1,9 +1,9 @@
-Here you will find the implementation of Make_consultable, Make_delegate and related Selective_hook and Global_wrap. Examples, along with several test programs are given in the src folder. The source code is release with the MIT license. It is not compatible with previous release, that was described in the Overload journal (number 127, June 2015).
+Here you will find the implementation of Make_consultable, Make_delegate and related Selective_hook and Global_wrap. Examples, along with several test programs, are given in the src folder. The source code is release with the MIT license. It is not compatible with previous release, that was described in the Overload journal (number 127, June 2015).
 
 Implementation and examples described in the overload 127 paper can be accessed in the "overload_127" branch:
 git checkout overload_127
 
-In order to use `Make_consultable` and `Make_delegate`, you only need to copy the header file ""
+In order to use `Make_consultable` and `Make_delegate`, you only need to copy the header file "make-consultable.hpp" with headers in your project.
 
 UPDATE (2023-10-12): the need of the `MPtr()` macro has been removed. Here is the new simplified syntax from the `01_consultable.cpp` file:
 ```
